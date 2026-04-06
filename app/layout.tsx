@@ -53,7 +53,7 @@ export default function RootLayout({
       lang="en"
       className={`${orbitron.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-900 text-white overflow-x-hidden">
+      <body className="min-h-full flex flex-col bg-slate-900 text-white overflow-x-hidden" suppressHydrationWarning>
         {children}
       </body>
     </html>

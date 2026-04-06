@@ -1,45 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import VocabCard, { VocabCardData } from './VocabCard';
-
-// Mock data for testing
-const mockCards: VocabCardData[] = [
-    {
-        id: 'card_001',
-        word: 'METICULOUS',
-        elo: 1200,
-        scenario: 'The bomb is ticking (0:10). You must cut the wires in an extremely [ ___ ] manner to survive.',
-        translationHint: 'Tỉ mỉ, cẩn thận chi tiết',
-        state: 'seed',
-    },
-    {
-        id: 'card_002',
-        word: 'UBIQUITOUS',
-        elo: 1350,
-        scenario: 'Smartphones are [ ___ ] in 2026—even your grandma livestreams on 3 platforms.',
-        translationHint: 'Có mặt khắp nơi',
-        state: 'seed',
-    },
-    {
-        id: 'card_003',
-        word: 'EPHEMERAL',
-        elo: 1450,
-        scenario: 'Your ex\'s Instagram story is [ ___ ]—gone in 24 hours, just like their promises.',
-        translationHint: 'Phù du, tồn tại ngắn ngủi',
-        state: 'sprout',
-    },
-];
+import { useLexicaStore } from '../store/lexicaStore';
 
 export default function SwipeDeck() {
-    const [cards, setCards] = useState<VocabCardData[]>(mockCards);
-    const [swipedCount, setSwipedCount] = useState(0);
+    const cards = useLexicaStore(state => state.currentDeck);
+    const swipeCard = useLexicaStore(state => state.swipeCard);
+    const consumeEnergy = useLexicaStore(state => state.consumeEnergy);
+    const energy = useLexicaStore(state => state.energy);
+
     const [lastSwipeDirection, setLastSwipeDirection] = useState<'left' | 'right' | null>(null);
 
     // Pre-compute exit directions based on card ID (deterministic)
-    const [exitDirections] = useState<Record<string, { x: number; y: number; rotate: number }>>(() =>
-        mockCards.reduce((acc, card, index) => {
+    const exitDirections = useMemo(() => {
+        return cards.reduce((acc, card, index) => {
             const direction = index % 2 === 0 ? 1 : -1;
             acc[card.id] = {
                 x: direction * 500,
@@ -47,18 +23,27 @@ export default function SwipeDeck() {
                 rotate: direction * 25,
             };
             return acc;
-        }, {} as Record<string, { x: number; y: number; rotate: number }>)
-    );
+        }, {} as Record<string, { x: number; y: number; rotate: number }>);
+    }, [cards]);
 
     const handleSwipe = (direction: 'left' | 'right', cardId: string) => {
+        // Check energy
+        if (energy <= 0) {
+            alert('⚡ No energy left! Come back tomorrow.');
+            return;
+        }
+
+        // Consume energy
+        const hasEnergy = consumeEnergy();
+        if (!hasEnergy) return;
+
         setLastSwipeDirection(direction);
 
         // Show feedback briefly
         setTimeout(() => setLastSwipeDirection(null), 1000);
 
-        // Animate card out
-        setCards((prev) => prev.filter((card) => card.id !== cardId));
-        setSwipedCount((prev) => prev + 1);
+        // Record swipe in store (updates ELO, stats, removes card)
+        swipeCard(cardId, direction);
 
         // Play sound effect (optional)
         if (direction === 'right') {
@@ -66,8 +51,6 @@ export default function SwipeDeck() {
         } else {
             console.log('❌ Forgot!');
         }
-
-        // Decrease energy (will implement later with global state)
     };
 
     if (cards.length === 0) {
@@ -84,10 +67,13 @@ export default function SwipeDeck() {
                     Deck Complete!
                 </h2>
                 <p className="text-slate-400 text-lg mb-8">
-                    You swiped through {swipedCount} cards. Time to unlock an absurd story...
+                    You cleared the deck. Story Mode coming in Phase 5...
                 </p>
-                <button className="px-8 py-4 bg-cyan-600 hover:bg-cyan-700 rounded-xl font-bold text-white transition-colors">
-                    UNLOCK STORY MODE →
+                <button
+                    onClick={() => useLexicaStore.getState().loadNewDeck()}
+                    className="px-8 py-4 bg-cyan-600 hover:bg-cyan-700 rounded-xl font-bold text-white transition-colors"
+                >
+                    LOAD NEW DECK →
                 </button>
             </div>
         );

@@ -48,6 +48,25 @@ button {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Custom scrollbar styling */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 /* Prevent pull-to-refresh on mobile */
 body {
   overscroll-behavior-y: contain;

@@ -1,14 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useVocalSwipe } from '../hooks/useVocalSwipe';
 import VocalSwipeUI from './VocalSwipeUI';
 
-export type CardState = 'seed' | 'sprout' | 'gold';
+export type CardState = 'seed' | 'sprout' | 'gold' | 'mastered';
 
 export interface VocabCardData {
     id: string;
     word: string;
+    ipa?: string; // International Phonetic Alphabet
     elo: number;
     scenario: string;
     translationHint: string;
@@ -23,6 +25,21 @@ interface VocabCardProps {
 }
 
 export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
+    const [revealed, setRevealed] = useState(false);
+
+    const isBossCard = card.isBossCard || false;
+
+    // Text-to-Speech function
+    const speakWord = () => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(card.word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8; // Speak slower for learning
+            window.speechSynthesis.cancel(); // Cancel any ongoing speech
+            window.speechSynthesis.speak(utterance);
+        }
+    };
+
     // Vocal Swipe Hook for Boss Cards
     const {
         state: vocalState,
@@ -39,8 +56,6 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
         },
         enabled: card.isBossCard || false,
     });
-
-    const isBossCard = card.isBossCard || false;
 
     return (
         <motion.div
@@ -65,9 +80,12 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
                 zIndex: 100 - index,
             }}
         >
-            <div className="relative mx-4 h-100 rounded-2xl bg-slate-800 p-6 border border-slate-700" style={{
-                boxShadow: index > 0 ? '0 -4px 12px rgba(0, 0, 0, 0.3)' : 'none'
-            }}>
+            <div
+                className="relative mx-4 h-100 rounded-2xl bg-slate-800 p-6 border border-slate-700"
+                style={{
+                    boxShadow: index > 0 ? '0 -4px 12px rgba(0, 0, 0, 0.3)' : 'none'
+                }}
+            >
                 {/* Boss Card Badge */}
                 {isBossCard && (
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-orange-600 text-white text-xs font-bold uppercase">
@@ -86,6 +104,9 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
                     {card.state === 'gold' && (
                         <div className="text-2xl">✨</div>
                     )}
+                    {card.state === 'mastered' && (
+                        <div className="text-2xl">🏆</div>
+                    )}
                 </div>
 
                 {/* ELO Rating */}
@@ -93,27 +114,51 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
                     ELO {card.elo}
                 </div>
 
-                {/* Target Word */}
-                <div className={`${isBossCard ? 'mt-16' : 'mt-12'} mb-6 text-center`}>
-                    <h2 className="text-4xl font-bold text-cyan-400">
-                        {card.word}
-                    </h2>
-                </div>
-
-                {/* POV Scenario */}
-                <div className="mb-4">
-                    <p className="text-base text-slate-300 leading-relaxed">
+                {/* Scenario - Always visible */}
+                <div className={`${isBossCard ? 'mt-16' : 'mt-12'} mb-8 text-center`}>
+                    <p className="text-lg text-slate-200 leading-relaxed">
                         {card.scenario}
                     </p>
                 </div>
 
-                {/* Translation Hint */}
+                {/* Reveal prompt or meaning */}
                 <div className="absolute bottom-6 left-6 right-6">
-                    <div className="px-3 py-2 rounded-lg bg-slate-700/50 border border-slate-600">
-                        <p className="text-sm text-slate-400 text-center">
-                            💡 {card.translationHint}
-                        </p>
-                    </div>
+                    {!revealed ? (
+                        <button
+                            onClick={() => setRevealed(true)}
+                            className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 hover:bg-slate-600 transition-colors active:scale-95"
+                        >
+                            <p className="text-sm text-slate-300 text-center font-medium">
+                                🤫 Nhấn để xem nghĩa
+                            </p>
+                        </button>
+                    ) : (
+                        <div className="px-4 py-3 rounded-lg bg-slate-700/80 border border-slate-600 w-full">
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <p className="text-base text-slate-200 text-center font-medium">
+                                    {card.word}
+                                </p>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        speakWord();
+                                    }}
+                                    className="text-slate-400 hover:text-cyan-400 transition-colors active:scale-90"
+                                    title="Phát âm"
+                                >
+                                    🔊
+                                </button>
+                            </div>
+                            {card.ipa && (
+                                <p className="text-xs text-slate-500 text-center mb-1 font-mono">
+                                    /{card.ipa}/
+                                </p>
+                            )}
+                            <p className="text-sm text-slate-400 text-center">
+                                {card.translationHint}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Vocal Swipe UI Overlay (Boss Cards Only) */}
