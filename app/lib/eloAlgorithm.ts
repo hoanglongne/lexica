@@ -182,7 +182,8 @@ export function selectNextCard(
 export function generateInitialDeck(
     userStats: UserStats,
     cardProgress: Record<string, UserCardProgress>,
-    selectedLevel?: DifficultyLevel | 'all' | null
+    selectedLevel?: DifficultyLevel | 'all' | null,
+    forcedCardIds: string[] = []
 ): VocabCardData[] {
     const deck: VocabCardData[] = [];
     const DECK_SIZE = 10;
@@ -191,6 +192,26 @@ export function generateInitialDeck(
     const filteredDatabase = (selectedLevel && selectedLevel !== 'all')
         ? VOCAB_DATABASE.filter(card => card.level === selectedLevel)
         : VOCAB_DATABASE;
+
+    // Step 0: Force-inject cards (story pack catch-up), bypassing ELO and level filter.
+    for (const forcedCardId of forcedCardIds) {
+        if (deck.length >= DECK_SIZE) break;
+        if (deck.some(card => card.id === forcedCardId)) continue;
+
+        const cardData = VOCAB_DATABASE.find(card => card.id === forcedCardId);
+        if (!cardData) continue;
+
+        const progress = cardProgress[forcedCardId];
+        deck.push({
+            ...cardData,
+            state: progress?.state || 'seed',
+        });
+
+        userStats.seenCardIds.push(cardData.id);
+        if (userStats.seenCardIds.length > 20) {
+            userStats.seenCardIds.shift();
+        }
+    }
 
     // Step 1: Get all due cards
     const dueCardProgresses = getDueCards(cardProgress);

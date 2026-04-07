@@ -6,6 +6,22 @@ import { X, ExternalLink, BookOpen, Trophy, Volume2 } from 'lucide-react';
 import { STORIES, parseStoryContentWithIds } from '../data/stories';
 import { VOCAB_DATABASE } from '../data/vocabCards';
 
+const VOCAB_ID_BY_WORD = new Map(
+    VOCAB_DATABASE.map(vocab => [vocab.word.trim().toLowerCase(), vocab.id])
+);
+
+const VOCAB_BY_ID = new Map(
+    VOCAB_DATABASE.map(vocab => [vocab.id, vocab])
+);
+
+interface StoryVocabDialogData {
+    word: string;
+    ipa?: string;
+    translationHint: string;
+    scenario?: string;
+    level?: string;
+}
+
 interface StoryModeProps {
     storyId: string;
     onClose: () => void;
@@ -14,15 +30,12 @@ interface StoryModeProps {
 
 export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps) {
     const [hasScrolledToEnd, setHasScrolledToEnd] = useState(false);
-    const [selectedVocabId, setSelectedVocabId] = useState<string | null>(null);
+    const [selectedVocab, setSelectedVocab] = useState<StoryVocabDialogData | null>(null);
     const story = STORIES.find(s => s.id === storyId);
 
     if (!story) return null;
 
     const contentSegments = parseStoryContentWithIds(story.content, story.vocabularyIds);
-    const selectedVocab = selectedVocabId
-        ? VOCAB_DATABASE.find(v => v.id === selectedVocabId)
-        : null;
 
     // Track scroll to show CTA
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -70,14 +83,38 @@ export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps
                     >
                         <div className="text-slate-300 text-base lg:text-lg leading-relaxed whitespace-pre-wrap">
                             {contentSegments.map((segment, index) => {
-                                if (segment.isVocab && segment.vocabId) {
+                                if (segment.isVocab) {
                                     return (
                                         <motion.button
                                             key={index}
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             transition={{ delay: index * 0.05 }}
-                                            onClick={() => setSelectedVocabId(segment.vocabId || null)}
+                                            onClick={() => {
+                                                const normalizedWord = segment.text.trim().toLowerCase();
+                                                const exactVocabId = VOCAB_ID_BY_WORD.get(normalizedWord);
+                                                const exactVocab = exactVocabId ? VOCAB_BY_ID.get(exactVocabId) : undefined;
+                                                const fallbackVocab = segment.vocabId ? VOCAB_BY_ID.get(segment.vocabId) : undefined;
+                                                const resolved = exactVocab || fallbackVocab;
+
+                                                if (resolved) {
+                                                    setSelectedVocab({
+                                                        word: segment.text.toUpperCase(),
+                                                        ipa: resolved.ipa,
+                                                        translationHint: resolved.translationHint,
+                                                        scenario: resolved.scenario,
+                                                        level: resolved.level,
+                                                    });
+                                                    return;
+                                                }
+
+                                                setSelectedVocab({
+                                                    word: segment.text.toUpperCase(),
+                                                    translationHint: 'Định nghĩa cho từ này đang được cập nhật.',
+                                                    scenario: 'Từ này đang được dùng trong ngữ cảnh câu chuyện.',
+                                                    level: story.difficultyLevel === 'mixed' ? 'intermediate' : story.difficultyLevel,
+                                                });
+                                            }}
                                             className="text-cyan-400 font-semibold bg-cyan-500/10 px-1 rounded hover:bg-cyan-500/20 cursor-pointer transition-colors border-b-2 border-cyan-500/30 hover:border-cyan-400"
                                             title="Click to see definition"
                                         >
@@ -166,7 +203,7 @@ export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setSelectedVocabId(null)}
+                            onClick={() => setSelectedVocab(null)}
                             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
                         />
 
@@ -179,7 +216,7 @@ export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps
                         >
                             {/* Close button */}
                             <button
-                                onClick={() => setSelectedVocabId(null)}
+                                onClick={() => setSelectedVocab(null)}
                                 className="absolute top-4 right-4 p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
                             >
                                 <X className="w-5 h-5 text-slate-400" />
@@ -191,9 +228,11 @@ export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps
                                     {selectedVocab.word}
                                 </h2>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-slate-400 text-sm font-mono">
-                                        {selectedVocab.ipa}
-                                    </span>
+                                    {selectedVocab.ipa && (
+                                        <span className="text-slate-400 text-sm font-mono">
+                                            {selectedVocab.ipa}
+                                        </span>
+                                    )}
                                     <button
                                         onClick={() => {
                                             const utterance = new SpeechSynthesisUtterance(selectedVocab.word);
@@ -225,7 +264,7 @@ export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps
                                     Example
                                 </h3>
                                 <p className="text-slate-300 text-sm italic leading-relaxed">
-                                    &ldquo;{selectedVocab.scenario}&rdquo;
+                                    &ldquo;{selectedVocab.scenario || 'Không có ví dụ cho từ này.'}&rdquo;
                                 </p>
                             </div>
 
@@ -233,7 +272,7 @@ export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps
                             <div className="flex items-center justify-between pt-4 border-t border-slate-700">
                                 <span className="text-xs text-slate-500">Level</span>
                                 <span className="text-xs font-semibold text-cyan-400 uppercase">
-                                    {selectedVocab.level}
+                                    {selectedVocab.level || 'intermediate'}
                                 </span>
                             </div>
                         </motion.div>

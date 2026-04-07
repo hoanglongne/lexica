@@ -21,7 +21,10 @@ export default function LevelTestWelcome({ onStartTest, onSkipToManual }: LevelT
             <div className="w-full max-w-2xl mx-auto pt-20 md:pt-24 space-y-6 md:space-y-8">
                 {/* Header */}
                 <div className="text-center space-y-3 md:space-y-4">
-                    <p className="text-lg md:text-xl text-slate-300">
+                    <p className="text-lg md:text-xl text-slate-300 md:hidden">
+                        Học từ vựng IELTS theo level của bạn
+                    </p>
+                    <p className="hidden md:block text-lg md:text-xl text-slate-300">
                         Học từ vựng IELTS với ELO-based adaptive learning
                     </p>
                     <p className="text-slate-400 text-xs md:text-sm">
@@ -52,29 +55,32 @@ export default function LevelTestWelcome({ onStartTest, onSkipToManual }: LevelT
                                     <FlaskConical className="w-6 h-6 md:w-7 md:h-7 text-cyan-400" />
                                 </div>
                                 <div className="flex-1 text-left">
-                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                        <h3 className="text-base md:text-lg font-bold text-white">
-                                            Test nhanh (30 giây)
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1">
+                                        <h3 className="text-base md:text-lg font-bold text-white leading-tight">
+                                            Test nhanh (30s)
                                         </h3>
                                         <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30">
                                             Recommended
                                         </span>
                                     </div>
-                                    <p className="text-sm text-slate-300 mb-2">
+                                    <p className="text-sm text-slate-300 mb-2 leading-relaxed md:hidden">
+                                        Gợi ý level nhanh, chính xác.
+                                    </p>
+                                    <p className="hidden md:block text-sm text-slate-300 mb-2 leading-relaxed">
                                         Hệ thống sẽ đánh giá và gợi ý level phù hợp nhất
                                     </p>
-                                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-slate-400">
                                         <span className="flex items-center gap-1">
                                             <CheckCircle className="w-3 h-3" />
                                             5 câu hỏi
                                         </span>
-                                        <span>•</span>
-                                        <span className="flex items-center gap-1">
+                                        <span className="hidden md:inline">•</span>
+                                        <span className="hidden md:flex items-center gap-1">
                                             <CheckCircle className="w-3 h-3" />
                                             Chính xác hơn
                                         </span>
-                                        <span>•</span>
-                                        <span className="flex items-center gap-1">
+                                        <span className="hidden md:inline">•</span>
+                                        <span className="hidden md:flex items-center gap-1">
                                             <CheckCircle className="w-3 h-3" />
                                             Adaptive ngay từ đầu
                                         </span>
@@ -96,12 +102,18 @@ export default function LevelTestWelcome({ onStartTest, onSkipToManual }: LevelT
                                     <h3 className="text-base md:text-lg font-bold text-white mb-1">
                                         Tự chọn level
                                     </h3>
-                                    <p className="text-sm text-slate-300 mb-2">
-                                        Bạn đã biết trình độ của mình
+                                    <p className="text-sm text-slate-300 mb-2 leading-relaxed md:hidden">
+                                        Chọn level bạn muốn học.
+                                    </p>
+                                    <p className="hidden md:block text-sm text-slate-300 mb-2 leading-relaxed">
+                                        Chọn level phù hợp với trình độ của bạn.
                                     </p>
                                     <div className="flex items-center gap-2 text-xs text-slate-400">
                                         <span>4 level: Cơ bản / Trung cấp / Nâng cao / Chuyên gia</span>
                                     </div>
+                                    <p className="hidden md:block text-xs text-slate-400 mt-2 leading-relaxed">
+                                        Hệ thống sẽ tự động điều chỉnh độ khó dựa trên performance của bạn. ELO routing đảm bảo bạn luôn ở flow state tối ưu cho bạn. Bạn có thể đổi level bất cứ lúc nào.
+                                    </p>
                                 </div>
                             </div>
                         </button>
@@ -112,9 +124,8 @@ export default function LevelTestWelcome({ onStartTest, onSkipToManual }: LevelT
                 <div className="text-center text-xs text-slate-500 space-y-1">
                     <p className="flex items-center justify-center gap-1.5">
                         <Lightbulb className="w-3.5 h-3.5" />
-                        Bạn có thể thay đổi level bất cứ lúc nào
+                        Bắt đầu với test 30 giây để hệ thống cân bằng độ khó chuẩn hơn
                     </p>
-                    <p>Hệ thống sẽ tự động điều chỉnh độ khó theo performance của bạn</p>
                 </div>
             </div>
         </div>

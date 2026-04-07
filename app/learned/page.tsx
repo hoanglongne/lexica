@@ -3,14 +3,45 @@
 import Link from 'next/link';
 import { BookOpen, Trophy, Save, Sparkles, BookMarked } from 'lucide-react';
 import { useLexicaStore } from '../store/lexicaStore';
-import { STORIES } from '../data/stories';
+import { STORIES, getStoryLearnedCount, isStoryPreviewVisible, isStoryUnlocked } from '../data/stories';
 import LearnedWordsList from '../components/LearnedWordsList';
 import StoryUnlockModal from '../components/StoryUnlockModal';
 import StoryMode from '../components/StoryMode';
 import { AnimatePresence } from 'framer-motion';
 
+function getLevelLabel(level: string) {
+    switch (level) {
+        case 'beginner':
+            return 'Cơ bản';
+        case 'intermediate':
+            return 'Trung cấp';
+        case 'advanced':
+            return 'Nâng cao';
+        case 'expert':
+            return 'Chuyên gia';
+        default:
+            return 'Mixed';
+    }
+}
+
+function getLevelBadgeClasses(level: string) {
+    switch (level) {
+        case 'beginner':
+            return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+        case 'intermediate':
+            return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+        case 'advanced':
+            return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+        case 'expert':
+            return 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20';
+        default:
+            return 'bg-slate-500/10 text-slate-300 border-slate-500/20';
+    }
+}
+
 export default function LearnedPage() {
     const learnedCount = useLexicaStore(state => state.learnedWords.size);
+    const learnedWords = useLexicaStore(state => state.learnedWords);
     const masteredCount = useLexicaStore(state => state.getMasteredWordsCount());
     const unlockedStories = useLexicaStore(state => state.unlockedStories);
     const readStories = useLexicaStore(state => state.readStories);
@@ -21,6 +52,8 @@ export default function LearnedPage() {
     const closeStory = useLexicaStore(state => state.closeStory);
     const closeStoryUnlockModal = useLexicaStore(state => state.closeStoryUnlockModal);
     const markStoryAsRead = useLexicaStore(state => state.markStoryAsRead);
+    const learnedWordIds = Array.from(learnedWords);
+    const visibleStories = STORIES.filter(story => isStoryPreviewVisible(story, learnedWordIds));
 
     return (
         <div className="min-h-screen bg-slate-900 px-4 py-8">
@@ -75,51 +108,86 @@ export default function LearnedPage() {
             </div>
 
             {/* Stories Section */}
-            {unlockedStories.length > 0 && (
+            {visibleStories.length > 0 && (
                 <div className="mb-8 bg-slate-800/30 border border-slate-700 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <BookMarked className="w-6 h-6 text-cyan-400" />
-                        <h2 className="text-2xl font-bold text-white">Unlocked Stories</h2>
+                        <h2 className="text-2xl font-bold text-white">Story Packs</h2>
                     </div>
 
                     <div className="space-y-3">
-                        {unlockedStories.map((storyId) => {
-                            const story = STORIES.find(s => s.id === storyId);
-                            if (!story) return null;
-
+                        {visibleStories.map((story) => {
+                            const storyId = story.id;
                             const isRead = readStories.includes(storyId);
+                            const learnedCountForStory = getStoryLearnedCount(story, learnedWordIds);
+                            const unlocked = isStoryUnlocked(story, learnedWordIds);
+                            const alreadyAnnounced = unlockedStories.includes(storyId);
 
                             return (
                                 <button
                                     key={storyId}
-                                    onClick={() => openStory(storyId)}
-                                    className="w-full px-4 py-4 rounded-lg bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 hover:border-cyan-500/50 transition-all text-left group"
+                                    onClick={() => {
+                                        if (unlocked) {
+                                            openStory(storyId);
+                                        }
+                                    }}
+                                    className={`w-full px-4 py-4 rounded-lg border transition-all text-left group ${unlocked
+                                            ? 'bg-slate-700/30 hover:bg-slate-700/50 border-slate-600/30 hover:border-cyan-500/50'
+                                            : 'bg-slate-800/40 border-slate-700/50 cursor-default'
+                                        }`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <BookMarked className={`w-5 h-5 ${isRead ? 'text-slate-500' : 'text-cyan-400'}`} />
-                                                <span className={`text-lg font-semibold ${isRead ? 'text-slate-400' : 'text-white'}`}>
+                                                <BookMarked className={`w-5 h-5 ${unlocked ? (isRead ? 'text-slate-500' : 'text-cyan-400') : 'text-slate-500'}`} />
+                                                <span className={`text-lg font-semibold ${unlocked ? (isRead ? 'text-slate-400' : 'text-white') : 'text-slate-300'}`}>
                                                     {story.title}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-3 ml-8">
-                                                <span className="text-sm text-slate-500">
-                                                    {story.difficultyLevel === 'beginner' ? 'Cơ bản' :
-                                                        story.difficultyLevel === 'intermediate' ? 'Trung cấp' :
-                                                            story.difficultyLevel === 'advanced' ? 'Nâng cao' : 'Chuyên gia'}
-                                                </span>
-                                                <span className="text-slate-600">•</span>
-                                                <span className="text-sm text-slate-500">
-                                                    {story.vocabularyIds.length} words
-                                                </span>
-                                                {!isRead && (
-                                                    <>
-                                                        <span className="text-slate-600">•</span>
+                                            <div className="ml-8">
+                                                <div className="flex flex-wrap items-center gap-2.5 mb-2">
+                                                    <span className={`px-2 py-1 rounded-full border text-xs font-medium ${getLevelBadgeClasses(story.difficultyLevel)}`}>
+                                                        {getLevelLabel(story.difficultyLevel)}
+                                                    </span>
+                                                    <span className="text-sm text-slate-500">
+                                                        {learnedCountForStory}/10
+                                                    </span>
+                                                    <span className="text-slate-600">•</span>
+                                                    <span className="text-sm text-slate-500">
+                                                        {story.darkComedyLevel === 'extreme' ? 'Dark comedy cực mạnh' : story.darkComedyLevel === 'high' ? 'Dark comedy cao' : 'Dark comedy vừa'}
+                                                    </span>
+                                                    {unlocked && !isRead && (
                                                         <span className="px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-medium">
                                                             Unread
                                                         </span>
-                                                    </>
+                                                    )}
+                                                    {!unlocked && learnedCountForStory >= 5 && (
+                                                        <span className="px-2 py-1 rounded-full bg-slate-700 text-slate-300 text-xs font-medium">
+                                                            Preview
+                                                        </span>
+                                                    )}
+                                                    {unlocked && alreadyAnnounced && (
+                                                        <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">
+                                                            10/10
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="h-2 rounded-full bg-slate-800 overflow-hidden mb-3">
+                                                    <div
+                                                        className={`h-full transition-all duration-500 ${unlocked ? 'bg-linear-to-r from-cyan-500 to-green-400' : 'bg-linear-to-r from-slate-500 to-cyan-500'}`}
+                                                        style={{ width: `${(learnedCountForStory / 10) * 100}%` }}
+                                                    />
+                                                </div>
+
+                                                <p className="text-sm text-slate-400 leading-relaxed">
+                                                    {story.teaser}
+                                                </p>
+
+                                                {!unlocked && (
+                                                    <p className="mt-2 text-xs text-slate-500 leading-relaxed">
+                                                        Thu thập thêm {10 - learnedCountForStory} từ trong pack này để mở khóa story.
+                                                    </p>
                                                 )}
                                             </div>
                                         </div>
@@ -130,7 +198,7 @@ export default function LearnedPage() {
                     </div>
 
                     <p className="text-xs text-slate-500 mt-4 text-center">
-                        Unlock 1 new story for every 10 words learned
+                        Story sẽ ló diện từ 5/10 từ và mở khóa hoàn toàn ở 10/10 từ trong cùng một pack
                     </p>
                 </div>
             )}

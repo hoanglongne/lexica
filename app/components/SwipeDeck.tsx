@@ -51,27 +51,32 @@ export default function SwipeDeck() {
         if (!topCardId) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+                return;
+            }
 
-            if (e.key === ' ') {
+            const isSpaceKey = e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
+
+            if (isSpaceKey) {
                 e.preventDefault();
                 setTopCardRevealed(true);
                 return;
             }
+
             if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 handleSwipe('left', topCardId);
                 return;
             }
+
             if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 handleSwipe('right', topCardId);
-                return;
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        document.addEventListener('keydown', handleKeyDown, true);
+        return () => document.removeEventListener('keydown', handleKeyDown, true);
     }, [topCardId, handleSwipe]);
 
     if (cards.length === 0) {

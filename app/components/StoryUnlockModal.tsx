@@ -110,7 +110,7 @@ export default function StoryUnlockModal({ storyId, onReadNow, onClose }: StoryU
                                 transition={{ delay: 0.4 }}
                                 className="text-slate-400 text-sm"
                             >
-                                Bạn đã học đủ từ vựng để mở khoá câu chuyện mới
+                                Bạn đã hoàn thành 10/10 từ trong pack này và mở khóa story mới
                             </motion.p>
                         </div>
 
@@ -155,7 +155,7 @@ export default function StoryUnlockModal({ storyId, onReadNow, onClose }: StoryU
                             transition={{ delay: 0.7 }}
                             className="text-slate-500 text-xs"
                         >
-                            💡 Các từ vựng bạn đã học sẽ được làm nổi bật trong câu chuyện
+                            💡 Mỗi story pack gom các từ có ELO gần nhau để không phá nhịp học của bạn
                         </motion.p>
                     </div>
                 </div>

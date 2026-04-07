@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { VocabCardData, DifficultyLevel } from '../components/VocabCard';
 import { UserStats, UserCardProgress, recordSwipe, generateInitialDeck, updateCardProgress } from '../lib/eloAlgorithm';
-import { getStoryForProgress } from '../data/stories';
+import { getStoryCatchUpWordIds, getUnlockableStory } from '../data/stories';
 
 /**
  * LEXICA Global State Store (Zustand + localStorage persistence)
@@ -194,8 +194,12 @@ export const useLexicaStore = create<LexicaStore>()(
 
             // Load new deck
             loadNewDeck: () => {
-                const { userStats, cardProgress, selectedLevel } = get();
-                const newDeck = generateInitialDeck(userStats, cardProgress, selectedLevel);
+                const { userStats, cardProgress, selectedLevel, learnedWords } = get();
+                const learnedWordIds = Array.from(learnedWords);
+
+                // If any story pack is at 7-9/10, inject missing words regardless of ELO.
+                const forcedCardIds = getStoryCatchUpWordIds(learnedWordIds, 3);
+                const newDeck = generateInitialDeck(userStats, cardProgress, selectedLevel, forcedCardIds);
 
                 set({ currentDeck: newDeck });
             },
@@ -283,11 +287,9 @@ export const useLexicaStore = create<LexicaStore>()(
                 const { learnedWords, unlockedStories } = get();
                 const learnedWordsList = Array.from(learnedWords);
 
-                // Check if there's an available story
-                const availableStory = getStoryForProgress(learnedWordsList, unlockedStories);
+                const availableStory = getUnlockableStory(learnedWordsList, unlockedStories);
 
                 if (availableStory) {
-                    // User has unlocked a new story!
                     get().openStoryUnlockModal(availableStory.id);
                 }
             },

@@ -1,13 +1,65 @@
 import { DifficultyLevel } from '../components/VocabCard';
+import { VOCAB_DATABASE } from './vocabCards';
 
 export interface Story {
     id: string;
     title: string;
-    content: string; // Story with vocabulary words marked as {word}
+    teaser: string;
+    content: string; // Legacy fallback content
     vocabularyIds: string[]; // 10 vocab card IDs used
     difficultyLevel: DifficultyLevel | 'mixed';
     darkComedyLevel: 'medium' | 'high' | 'extreme';
 }
+
+const STORY_TEMPLATES: Record<string, string> = {
+    story_001: `You arrive at the bank at 3 AM with an {0} amount of confidence and zero common sense.
+
+Your {1} process is simple: if the movie made it look easy, it must be real life. Unfortunately, you immediately face a moral {2}: steal money or go home and sleep.
+
+You decide to test whether this plan is actually {3}. The answer becomes {4} when the front door is locked and the guard starts recording you.
+
+Trying to look {5}, you explain that you're "auditing their night security." Your excuse is so {6} that even you don't understand it.
+
+The guard, somehow {7} after years of nonsense, asks you to leave for the third time.
+
+You keep talking in a {8} monologue about economic freedom until he opens the door just to get rid of you.
+
+As you walk out, you notice one {9} detail: your "master plan" was written on a pizza box in glitter pen.`,
+    story_002: `You enter the office lobby with a {0} resume while zombies are already in the parking lot.
+
+Panic is {1}, but you stay calm because confidence is temporary, like all things {2}.
+
+The interviewer compliments your {3} answer about leadership, though his left eye falls into his coffee mid-sentence.
+
+"Your survival plan sounds {4}," he says. "Now let me {5} your references."
+
+You remain {6}: "All my references were eaten ten minutes ago."
+
+He pauses to {7} that, then asks why you want this role.
+
+"Because my previous life was too {8}," you reply, as a zombie HR intern crawls under the table.
+
+He nods. "Adaptability is {9} to this company culture. You're hired if you survive the exit interview."
+
+The exit interview is just running to the helicopter while signing tax forms.`,
+    story_003: `You travel back to 1920 and immediately face a historical {0}: fix the timeline or avoid being arrested for your futuristic shoes.
+
+Your panic will only {1} the mission, so you try to {2} chaos by pretending to be a quiet accountant.
+
+Then someone asks why your watch has a touchscreen. You invent a long explanation full of philosophical {3} and fake confidence.
+
+Unfortunately, your lies are too {4}. Every answer creates three new questions and two suspicious uncles.
+
+To stay hidden, you remove all {5} gadgets and keep only one {6} objective: stop the inventor before lunch.
+
+At the {7} of your speech, you deliver a perfectly {8} warning about the future.
+
+The inventor smiles and calls your logic "beautifully {9}." Then he invents the dangerous sandwich anyway.
+
+By sunset, the timeline has forked into 47 cursed realities where everyone debates condiments for eternity.`,
+};
+
+const VOCAB_BY_ID = new Map(VOCAB_DATABASE.map(vocab => [vocab.id, vocab]));
 
 /**
  * Pre-generated absurd dark-comedy stories
@@ -17,78 +69,123 @@ export const STORIES: Story[] = [
     {
         id: 'story_001',
         title: 'The Meticulous Heist',
+        teaser: 'Một vụ cướp ngân hàng ngu ngốc đến mức guard phải mở cửa chỉ để đuổi bạn đi.',
         difficultyLevel: 'intermediate',
         darkComedyLevel: 'high',
         vocabularyIds: ['v001', 'v002', 'v003', 'v004', 'v005', 'v006', 'v007', 'v008', 'v009', 'v010'],
-        content: `You arrive at the bank at 3 AM. The plan must be absolutely {meticulous}—one wrong move and the alarm triggers.
+        content: `You arrive at the bank at 3 AM with an {abundant} amount of confidence and zero common sense.
 
-Your hands are {trembling} as you approach the vault. "Stay calm," you whisper to yourself. This is the most {significant} moment of your criminal career.
+Your {cognitive} process is simple: if the movie made it look easy, it must be real life. Unfortunately, you immediately face a moral {dilemma}: steal money or go home and sleep.
 
-The security guard looks {suspicious}. He's been watching you for the past 2 minutes. You maintain a {casual} expression, pretending to fill out a deposit slip at midnight. Completely normal behavior.
+You decide to test whether this plan is actually {feasible}. The answer becomes {inevitable} when the front door is locked and the guard starts recording you.
 
-"Sir, we're closed," he says in a {stern} voice.
+Trying to look {pragmatic}, you explain that you're "auditing their night security." Your excuse is so {ambiguous} that even you don't understand it.
 
-"Oh really?" You act {surprised}, as if the locked doors and darkness weren't {obvious} clues.
+The guard, somehow {resilient} after years of nonsense, asks you to leave for the third time.
 
-He escorts you out. Your heist has been {thoroughly} ruined before it even started.
+You keep talking in a {tedious} monologue about economic freedom until he opens the door just to get rid of you.
 
-Outside, you realize you forgot the most {critical} detail: banks close at 5 PM.
-
-You are not a {competent} criminal.`,
+As you walk out, you notice one {subtle} detail: your "master plan" was written on a pizza box in glitter pen.`,
     },
     {
         id: 'story_002',
         title: 'The Apocalypse Job Interview',
+        teaser: 'Bạn đi phỏng vấn việc làm giữa tận thế zombie và vẫn phải trả lời HR như không có gì xảy ra.',
         difficultyLevel: 'advanced',
         darkComedyLevel: 'extreme',
         vocabularyIds: ['v011', 'v012', 'v013', 'v014', 'v015', 'v016', 'v017', 'v018', 'v019', 'v020'],
-        content: `The zombies are {approaching} the building. You check your watch: 2:54 PM. Your job interview starts in 6 minutes.
+        content: `You enter the office lobby with a {meticulous} resume while zombies are already in the parking lot.
 
-"I need to make a good {impression}," you think, straightening your tie. The apocalypse is no excuse for being {unprofessional}.
+Panic is {ubiquitous}, but you stay calm because confidence is temporary, like all things {ephemeral}.
 
-The interviewer—missing half his face—asks about your {qualifications}. You mention your MBA. He seems {indifferent}, probably because he's actively decomposing.
+The interviewer compliments your {eloquent} answer about leadership, though his left eye falls into his coffee mid-sentence.
 
-"Where do you see yourself in 5 years?" he {inquires}, his jawbone hanging loose.
+"Your survival plan sounds {plausible}," he says. "Now let me {scrutinize} your references."
 
-You consider the question {carefully}. "Well, given the current circumstances, probably hiding in a bunker eating canned beans."
+You remain {candid}: "All my references were eaten ten minutes ago."
 
-He writes something down. You notice his hand is {literally} falling off.
+He pauses to {contemplate} that, then asks why you want this role.
 
-"Do you work well under {pressure}?" 
+"Because my previous life was too {mundane}," you reply, as a zombie HR intern crawls under the table.
 
-"I'm having a job interview during a zombie apocalypse. You tell me."
+He nods. "Adaptability is {inherent} to this company culture. You're hired if you survive the exit interview."
 
-He nods, {appreciating} your honesty. "You're {hired}. Start Monday."
-
-Monday never comes. Everyone is dead by Thursday.`,
+The exit interview is just running to the helicopter while signing tax forms.`,
     },
     {
         id: 'story_003',
         title: 'The Sophisticated Time Traveler',
+        teaser: 'Một chuyến du hành thời gian biến thành thảm họa vì bạn nói quá nhiều với nhầm người.',
         difficultyLevel: 'expert',
         darkComedyLevel: 'extreme',
         vocabularyIds: ['v021', 'v022', 'v023', 'v024', 'v025', 'v026', 'v027', 'v028', 'v029', 'v030'],
-        content: `You've traveled back to 1920. Your mission: prevent a {catastrophic} timeline split. Your method: incredibly {elaborate} planning.
+        content: `You travel back to 1920 and immediately face a historical {conundrum}: fix the timeline or avoid being arrested for your futuristic shoes.
 
-The problem? You're {simultaneously} trying to maintain historical accuracy while also stopping a world war. This is proving {remarkably} difficult.
+Your panic will only {exacerbate} the mission, so you try to {mitigate} chaos by pretending to be a quiet accountant.
 
-A flapper asks if you'd like to dance. You {decline} politely, explaining you're from 2026 and touching people could create a {paradox}.
+Then someone asks why your watch has a touchscreen. You invent a long explanation full of philosophical {nuance} and fake confidence.
 
-She thinks you're insane. She's not {entirely} wrong.
+Unfortunately, your lies are too {prolific}. Every answer creates three new questions and two suspicious uncles.
 
-You spot your target: a man who will {inadvertently} start World War III by inventing a {peculiar} type of sandwich in 1987. Don't ask how. Time travel logic is {convoluted}.
+To stay hidden, you remove all {redundant} gadgets and keep only one {tangible} objective: stop the inventor before lunch.
 
-"Sir, would you consider becoming a vegetarian?" you ask desperately.
+At the {zenith} of your speech, you deliver a perfectly {coherent} warning about the future.
 
-He looks at you, {bewildered}. "What's a vegetarian?"
+The inventor smiles and calls your logic "beautifully {arbitrary}." Then he invents the dangerous sandwich anyway.
 
-You realize you've just introduced the concept 30 years too early.
-
-The timeline splits again. There are now 47 parallel universes. You've made everything worse.
-
-You should've just stayed home.`,
+By sunset, the timeline has forked into 47 cursed realities where everyone debates condiments for eternity.`,
     },
 ];
+
+export function getStoryLearnedCount(story: Story, learnedWordIds: string[]): number {
+    const learnedSet = new Set(learnedWordIds);
+    return story.vocabularyIds.filter(vocabularyId => learnedSet.has(vocabularyId)).length;
+}
+
+export function isStoryPreviewVisible(story: Story, learnedWordIds: string[]): boolean {
+    return getStoryLearnedCount(story, learnedWordIds) >= 5;
+}
+
+export function isStoryUnlocked(story: Story, learnedWordIds: string[]): boolean {
+    return getStoryLearnedCount(story, learnedWordIds) >= story.vocabularyIds.length;
+}
+
+export function getUnlockableStory(
+    learnedWordIds: string[],
+    unlockedStoryIds: string[]
+): Story | null {
+    return STORIES.find(story => {
+        const alreadyUnlocked = unlockedStoryIds.includes(story.id);
+        return !alreadyUnlocked && isStoryUnlocked(story, learnedWordIds);
+    }) || null;
+}
+
+/**
+ * When a pack reaches 7-9/10 learned words, force-inject remaining words
+ * into upcoming decks so the user can finish the pack quickly.
+ */
+export function getStoryCatchUpWordIds(
+    learnedWordIds: string[],
+    maxWordsToInject = 3
+): string[] {
+    const candidatePacks = STORIES
+        .map(story => {
+            const learnedCount = getStoryLearnedCount(story, learnedWordIds);
+            return {
+                story,
+                learnedCount,
+                missingWordIds: story.vocabularyIds.filter(id => !learnedWordIds.includes(id)),
+            };
+        })
+        .filter(item => item.learnedCount >= 7 && item.learnedCount < item.story.vocabularyIds.length)
+        .sort((a, b) => b.learnedCount - a.learnedCount);
+
+    if (candidatePacks.length === 0) {
+        return [];
+    }
+
+    return candidatePacks[0].missingWordIds.slice(0, maxWordsToInject);
+}
 
 /**
  * Get story by learned words count
@@ -99,6 +196,12 @@ export function getStoryForProgress(
     learnedWordIds: string[],
     unlockedStoryIds: string[]
 ): Story | null {
+    // Legacy helper kept for compatibility. Story packs now unlock per-pack at 10/10.
+    const unlockableStory = getUnlockableStory(learnedWordIds, unlockedStoryIds);
+    if (unlockableStory) {
+        return unlockableStory;
+    }
+
     const totalLearned = learnedWordIds.length;
 
     // Calculate how many stories should be unlocked
@@ -195,4 +298,28 @@ export function parseStoryContentWithIds(
     }
 
     return segments;
+}
+
+export function renderStoryContent(storyId: string, assignedVocabularyIds?: string[]): string {
+    const story = STORIES.find(item => item.id === storyId);
+    if (!story) return '';
+
+    const template = STORY_TEMPLATES[storyId];
+    if (!template) return story.content;
+
+    const vocabularyIds = assignedVocabularyIds && assignedVocabularyIds.length > 0
+        ? assignedVocabularyIds
+        : story.vocabularyIds;
+
+    return template.replace(/\{(\d+)\}/g, (_match, rawIndex) => {
+        const index = Number(rawIndex);
+        const vocabId = vocabularyIds[index];
+        const vocab = vocabId ? VOCAB_BY_ID.get(vocabId) : undefined;
+
+        if (!vocab) {
+            return '{unknown}';
+        }
+
+        return `{${vocab.word.toLowerCase()}}`;
+    });
 }
