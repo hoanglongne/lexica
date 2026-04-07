@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Ban, MicOff, PartyPopper, Mic } from 'lucide-react';
 import { VocalSwipeState } from '../hooks/useVocalSwipe';
 
 interface VocalSwipeUIProps {
@@ -24,7 +25,7 @@ export default function VocalSwipeUI({
         return (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur rounded-3xl">
                 <div className="text-center px-8">
-                    <div className="text-5xl mb-4">🚫</div>
+                    <Ban className="w-16 h-16 text-red-400 mx-auto mb-4" />
                     <p className="text-red-400 font-semibold">
                         Web Speech API not supported
                     </p>
@@ -40,7 +41,7 @@ export default function VocalSwipeUI({
         return (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur rounded-3xl">
                 <div className="text-center px-8">
-                    <div className="text-5xl mb-4">🎤❌</div>
+                    <MicOff className="w-16 h-16 text-orange-400 mx-auto mb-4" />
                     <p className="text-orange-400 font-semibold mb-2">
                         Microphone permission denied
                     </p>
@@ -81,9 +82,9 @@ export default function VocalSwipeUI({
                 <motion.div
                     initial={{ scale: 0, rotate: 0 }}
                     animate={{ scale: [0, 1.5, 1], rotate: [0, 180, 360] }}
-                    className="absolute inset-0 flex items-center justify-center text-9xl pointer-events-none"
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 >
-                    🎉
+                    <PartyPopper className="w-32 h-32 text-yellow-400" />
                 </motion.div>
             )}
 
@@ -98,9 +99,9 @@ export default function VocalSwipeUI({
                     repeat: state === 'LISTENING' ? Infinity : 0,
                     duration: 1,
                 }}
-                className={`relative text-8xl mb-6 ${getMicColor()} ${getGlowIntensity()} transition-all cursor-pointer hover:scale-110 disabled:cursor-not-allowed`}
+                className={`relative mb-6 ${getMicColor()} ${getGlowIntensity()} transition-all cursor-pointer hover:scale-110 disabled:cursor-not-allowed`}
             >
-                🎤
+                <Mic className="w-24 h-24" />
 
                 {/* Hit Counter Badge */}
                 {hitsRemaining < 3 && state !== 'SUCCESS' && state !== 'FAIL' && (
@@ -121,9 +122,9 @@ export default function VocalSwipeUI({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className={`font-mono text-lg ${state === 'FAIL' ? 'text-red-400' :
-                                state === 'SUCCESS' ? 'text-yellow-300' :
-                                    state === 'LISTENING' ? 'text-cyan-400' :
-                                        'text-green-400'
+                            state === 'SUCCESS' ? 'text-yellow-300' :
+                                state === 'LISTENING' ? 'text-cyan-400' :
+                                    'text-green-400'
                             }`}
                     >
                         {transcript}
@@ -152,8 +153,8 @@ export default function VocalSwipeUI({
                                 duration: 0.5,
                             }}
                             className={`w-4 h-4 rounded-full ${isCompleted ? 'bg-green-400' :
-                                    isCurrent ? 'bg-cyan-400' :
-                                        'bg-slate-700'
+                                isCurrent ? 'bg-cyan-400' :
+                                    'bg-slate-700'
                                 }`}
                         />
                     );

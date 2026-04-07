@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
+import { HandHeart, Sprout, Leaf, Sparkles, Trophy, Volume2 } from 'lucide-react';
 import { useLexicaStore } from '../store/lexicaStore';
 import { VOCAB_DATABASE } from '../data/vocabCards';
 
@@ -44,17 +45,26 @@ export default function LearnedWordsList() {
     return (
         <div className="space-y-2">
             {learnedCards.length === 0 ? (
-                <p className="text-slate-500 text-center py-8">
-                    Chưa học từ nào. Bắt đầu swipe thôi! 👆
-                </p>
+                <div className="text-slate-500 text-center py-8 flex flex-col items-center gap-2">
+                    <HandHeart className="w-8 h-8" />
+                    <p>Chưa học từ nào. Bắt đầu swipe thôi!</p>
+                </div>
             ) : (
                 learnedCards.map(card => {
                     if (!card) return null;
-                    const stateEmoji = {
-                        seed: '🌱',
-                        sprout: '🌿',
-                        gold: '✨',
-                        mastered: '🏆',
+
+                    const StateIcon = {
+                        seed: Sprout,
+                        sprout: Leaf,
+                        gold: Sparkles,
+                        mastered: Trophy,
+                    }[card.progress?.state || 'seed'];
+
+                    const stateColor = {
+                        seed: 'text-green-400',
+                        sprout: 'text-cyan-400',
+                        gold: 'text-yellow-400',
+                        mastered: 'text-yellow-400',
                     }[card.progress?.state || 'seed'];
 
                     return (
@@ -64,16 +74,19 @@ export default function LearnedWordsList() {
                         >
                             <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xl">{stateEmoji}</span>
+                                    <div className="p-1 bg-slate-700/50 rounded">
+                                        <StateIcon className={`w-4 h-4 ${stateColor}`} />
+                                    </div>
                                     <span className="font-semibold text-slate-200">{card.word}</span>
                                     <button
                                         onClick={() => speakWord(card.word)}
-                                        className="text-slate-500 hover:text-cyan-400 transition-colors"
+                                        className="text-slate-500 hover:text-cyan-400 transition-colors p-1"
+                                        title="Nghe phát âm"
                                     >
-                                        🔊
+                                        <Volume2 className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <span className="text-xs text-slate-500">ELO {card.elo}</span>
+                                <span className="text-xs text-slate-500 font-mono">ELO {card.elo}</span>
                             </div>
                             {card.ipa && (
                                 <p className="text-xs text-slate-500 font-mono mb-1">/{card.ipa}/</p>

@@ -1,5 +1,5 @@
 import { VOCAB_DATABASE } from '../data/vocabCards';
-import { VocabCardData } from '../components/VocabCard';
+import { VocabCardData, DifficultyLevel } from '../components/VocabCard';
 
 /**
  * LEXICA ELO ROUTING & ADAPTIVE DIFFICULTY ALGORITHM
@@ -102,15 +102,30 @@ export function getAdaptiveEloRange(userElo: number, struggleRate: number): [num
 /**
  * Select next card using weighted random selection
  * Closer cards to user ELO are more likely to be selected
+ * 
+ * @param selectedLevel - Filter by difficulty level (null/'all' = no filter)
  */
 export function selectNextCard(
     userStats: UserStats,
-    availableCards: Omit<VocabCardData, 'state'>[]
+    availableCards: Omit<VocabCardData, 'state'>[],
+    selectedLevel?: DifficultyLevel | 'all' | null
 ): Omit<VocabCardData, 'state'> | null {
+    // Filter by level if specified
+    let filteredCards = availableCards;
+    if (selectedLevel && selectedLevel !== 'all') {
+        filteredCards = availableCards.filter(card => card.level === selectedLevel);
+    }
+
     // Filter out recently seen cards
-    const unseenCards = availableCards.filter(
+    const unseenCards = filteredCards.filter(
         card => !userStats.seenCardIds.includes(card.id)
     );
+
+    if (unseenCards.length === 0) {
+        // If all cards seen, reset seen list and use all filtered cards
+        if (filteredCards.length === 0) return null;
+        return filteredCards[Math.floor(Math.random() * filteredCards.length)];
+    }
 
     if (unseenCards.length === 0) {
         // If all cards seen, reset seen list and use all cards
@@ -161,23 +176,32 @@ export function selectNextCard(
  * Deck composition:
  * - Priority 1: Cards due for review (from cardProgress)
  * - Priority 2: New cards based on ELO routing
+ * 
+ * @param selectedLevel - Filter cards by difficulty level
  */
 export function generateInitialDeck(
     userStats: UserStats,
-    cardProgress: Record<string, UserCardProgress>
+    cardProgress: Record<string, UserCardProgress>,
+    selectedLevel?: DifficultyLevel | 'all' | null
 ): VocabCardData[] {
     const deck: VocabCardData[] = [];
     const DECK_SIZE = 10;
+
+    // Filter database by level if specified
+    const filteredDatabase = (selectedLevel && selectedLevel !== 'all')
+        ? VOCAB_DATABASE.filter(card => card.level === selectedLevel)
+        : VOCAB_DATABASE;
 
     // Step 1: Get all due cards
     const dueCardProgresses = getDueCards(cardProgress);
 
     // Step 2: Add due cards to deck (up to DECK_SIZE)
+    // Only include due cards that match the selected level filter
     for (const progress of dueCardProgresses) {
         if (deck.length >= DECK_SIZE) break;
 
         // Find card in database
-        const cardData = VOCAB_DATABASE.find((c: Omit<VocabCardData, 'state'>) => c.id === progress.cardId);
+        const cardData = filteredDatabase.find((c: Omit<VocabCardData, 'state'>) => c.id === progress.cardId);
         if (cardData) {
             deck.push({
                 ...cardData,
@@ -194,7 +218,7 @@ export function generateInitialDeck(
 
     // Step 3: Fill remaining slots with new cards (ELO-based)
     while (deck.length < DECK_SIZE) {
-        const nextCard = selectNextCard(userStats, VOCAB_DATABASE);
+        const nextCard = selectNextCard(userStats, filteredDatabase, selectedLevel);
         if (!nextCard) break; // No more cards available
 
         // Check if card has existing progress

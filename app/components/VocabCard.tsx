@@ -2,16 +2,19 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Sprout, Leaf, Sparkles, Trophy, Swords, Eye, Volume2, Check, X as XIcon } from 'lucide-react';
 import { useVocalSwipe } from '../hooks/useVocalSwipe';
 import VocalSwipeUI from './VocalSwipeUI';
 
 export type CardState = 'seed' | 'sprout' | 'gold' | 'mastered';
+export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
 
 export interface VocabCardData {
     id: string;
     word: string;
     ipa?: string; // International Phonetic Alphabet
     elo: number;
+    level: DifficultyLevel; // Difficulty level based on ELO
     scenario: string;
     translationHint: string;
     state: CardState;
@@ -88,24 +91,33 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
             >
                 {/* Boss Card Badge */}
                 {isBossCard && (
-                    <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-orange-600 text-white text-xs font-bold uppercase">
-                        ⚔️ BOSS CARD
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-orange-600 text-white text-xs font-bold uppercase flex items-center gap-1.5">
+                        <Swords className="w-3.5 h-3.5" />
+                        BOSS CARD
                     </div>
                 )}
 
                 {/* Evolution Badge */}
                 <div className="absolute top-3 right-3">
                     {card.state === 'seed' && (
-                        <div className="text-2xl">🌱</div>
+                        <div className="p-1.5 bg-slate-700/50 rounded-lg">
+                            <Sprout className="w-5 h-5 text-green-400" />
+                        </div>
                     )}
                     {card.state === 'sprout' && (
-                        <div className="text-2xl">🌿</div>
+                        <div className="p-1.5 bg-slate-700/50 rounded-lg">
+                            <Leaf className="w-5 h-5 text-cyan-400" />
+                        </div>
                     )}
                     {card.state === 'gold' && (
-                        <div className="text-2xl">✨</div>
+                        <div className="p-1.5 bg-slate-700/50 rounded-lg">
+                            <Sparkles className="w-5 h-5 text-yellow-400" />
+                        </div>
                     )}
                     {card.state === 'mastered' && (
-                        <div className="text-2xl">🏆</div>
+                        <div className="p-1.5 bg-slate-700/50 rounded-lg">
+                            <Trophy className="w-5 h-5 text-yellow-400" />
+                        </div>
                     )}
                 </div>
 
@@ -126,10 +138,11 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
                     {!revealed ? (
                         <button
                             onClick={() => setRevealed(true)}
-                            className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 hover:bg-slate-600 transition-colors active:scale-95"
+                            className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 hover:bg-slate-600 transition-colors active:scale-95 flex items-center justify-center gap-2"
                         >
+                            <Eye className="w-4 h-4 text-slate-300" />
                             <p className="text-sm text-slate-300 text-center font-medium">
-                                🤫 Nhấn để xem nghĩa
+                                Nhấn để xem nghĩa
                             </p>
                         </button>
                     ) : (
@@ -146,7 +159,7 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
                                     className="text-slate-400 hover:text-cyan-400 transition-colors active:scale-90"
                                     title="Phát âm"
                                 >
-                                    🔊
+                                    <Volume2 className="w-5 h-5" />
                                 </button>
                             </div>
                             {card.ipa && (
@@ -178,20 +191,20 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
             {!isBossCard && (
                 <>
                     <motion.div
-                        className="absolute top-1/2 left-8 -translate-y-1/2 text-6xl opacity-0"
+                        className="absolute top-1/2 left-8 -translate-y-1/2 opacity-0"
                         style={{
                             opacity: 0,
                         }}
                     >
-                        ❌
+                        <XIcon className="w-16 h-16 text-red-400" />
                     </motion.div>
                     <motion.div
-                        className="absolute top-1/2 right-8 -translate-y-1/2 text-6xl opacity-0"
+                        className="absolute top-1/2 right-8 -translate-y-1/2 opacity-0"
                         style={{
                             opacity: 0,
                         }}
                     >
-                        ✅
+                        <Check className="w-16 h-16 text-green-400" />
                     </motion.div>
                 </>
             )}

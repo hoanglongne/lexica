@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Zap, AlertTriangle, Skull } from 'lucide-react';
 
 interface EnergyBarProps {
     currentEnergy: number;
@@ -25,7 +26,7 @@ export default function EnergyBar({ currentEnergy, maxEnergy }: EnergyBarProps) 
                 {/* Energy Header */}
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                        <span className="text-2xl">⚡</span>
+                        <Zap className="w-5 h-5 text-cyan-400" />
                         <span className="text-sm font-bold text-cyan-400 uppercase tracking-wider cyber-text">
                             Energy
                         </span>
@@ -83,15 +84,17 @@ export default function EnergyBar({ currentEnergy, maxEnergy }: EnergyBarProps) 
 
                 {/* Low energy warning */}
                 {currentEnergy < 5 && currentEnergy > 0 && (
-                    <p className="text-center text-xs text-red-400 mt-2 animate-pulse font-medium">
-                        ⚠️ Low Energy! Resets at midnight
+                    <p className="flex items-center justify-center gap-1.5 text-xs text-red-400 mt-2 animate-pulse font-medium">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>Low Energy! Resets at midnight</span>
                     </p>
                 )}
 
                 {/* Empty energy message */}
                 {currentEnergy === 0 && (
-                    <p className="text-center text-xs text-red-500 mt-2 font-bold uppercase tracking-wide">
-                        💀 Energy Depleted! Come back tomorrow
+                    <p className="flex items-center justify-center gap-1.5 text-xs text-red-500 mt-2 font-bold uppercase tracking-wide">
+                        <Skull className="w-3.5 h-3.5" />
+                        <span>Energy Depleted! Come back tomorrow</span>
                     </p>
                 )}
             </div>

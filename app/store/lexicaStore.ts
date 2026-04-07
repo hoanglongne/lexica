@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { VocabCardData } from '../components/VocabCard';
+import { VocabCardData, DifficultyLevel } from '../components/VocabCard';
 import { UserStats, UserCardProgress, recordSwipe, generateInitialDeck, updateCardProgress } from '../lib/eloAlgorithm';
 
 /**
@@ -10,6 +10,7 @@ import { UserStats, UserCardProgress, recordSwipe, generateInitialDeck, updateCa
  * - User stats (ELO, swipe history, energy)
  * - Current card deck
  * - Energy system (30 max, resets at midnight)
+ * - Selected difficulty level
  */
 
 interface LexicaStore {
@@ -30,12 +31,28 @@ interface LexicaStore {
     // Current Deck
     currentDeck: VocabCardData[];
 
+    // Difficulty Level Selection
+    selectedLevel: DifficultyLevel | 'all' | null; // null = not selected yet
+
+    // Level Test Flow
+    hasSeenWelcome: boolean; // Has user seen the welcome screen
+    isInTest: boolean; // Currently taking the test
+    testScore: number | null; // Test score (0-5)
+    recommendedLevel: DifficultyLevel | null; // AI recommended level from test
+
     // Actions
     swipeCard: (cardId: string, direction: 'left' | 'right') => void;
     consumeEnergy: () => boolean; // Returns false if not enough energy
     checkAndResetEnergy: () => void; // Check if midnight passed, reset if needed
     loadNewDeck: () => void;
     resetProgress: () => void; // Debug: reset everything
+    setSelectedLevel: (level: DifficultyLevel | 'all' | null) => void; // Set difficulty level
+
+    // Test flow actions
+    startTest: () => void;
+    skipToManual: () => void;
+    completeTest: (score: number, recommendedLevel: DifficultyLevel) => void;
+    acceptRecommendedLevel: () => void;
 
     // Helpers
     getLearnedWordsCount: () => number;
@@ -80,6 +97,14 @@ export const useLexicaStore = create<LexicaStore>()(
             maxEnergy: 30,
             lastEnergyReset: getMidnightTimestamp(),
             currentDeck: [],
+            selectedLevel: null, // User hasn't selected level yet
+
+            // Test flow state
+            hasSeenWelcome: false,
+            isInTest: false,
+            testScore: null,
+            recommendedLevel: null,
+
 
             // Swipe card action
             swipeCard: (cardId, direction) => {
@@ -143,8 +168,8 @@ export const useLexicaStore = create<LexicaStore>()(
 
             // Load new deck
             loadNewDeck: () => {
-                const { userStats, cardProgress } = get();
-                const newDeck = generateInitialDeck(userStats, cardProgress);
+                const { userStats, cardProgress, selectedLevel } = get();
+                const newDeck = generateInitialDeck(userStats, cardProgress, selectedLevel);
 
                 set({ currentDeck: newDeck });
             },
@@ -158,7 +183,49 @@ export const useLexicaStore = create<LexicaStore>()(
                     energy: 30,
                     lastEnergyReset: getMidnightTimestamp(),
                     currentDeck: [],
+                    selectedLevel: null, // Reset level selection
+                    hasSeenWelcome: false, // Reset welcome screen
+                    isInTest: false,
+                    testScore: null,
+                    recommendedLevel: null,
                 });
+            },
+
+            // Set selected difficulty level
+            setSelectedLevel: (level) => {
+                set({ selectedLevel: level });
+                // Reload deck with new level filter
+                get().loadNewDeck();
+            },
+
+            // Test flow actions
+            startTest: () => {
+                set({
+                    hasSeenWelcome: true,
+                    isInTest: true
+                });
+            },
+
+            skipToManual: () => {
+                set({
+                    hasSeenWelcome: true,
+                    isInTest: false
+                });
+            },
+
+            completeTest: (score, recommendedLevel) => {
+                set({
+                    isInTest: false,
+                    testScore: score,
+                    recommendedLevel: recommendedLevel
+                });
+            },
+
+            acceptRecommendedLevel: () => {
+                const { recommendedLevel } = get();
+                if (recommendedLevel) {
+                    get().setSelectedLevel(recommendedLevel);
+                }
             },
 
             // Helper: Get count of learned words
@@ -188,15 +255,26 @@ export const useLexicaStore = create<LexicaStore>()(
                 learnedWords: Array.from(state.learnedWords), // Convert Set to Array for JSON
                 energy: state.energy,
                 lastEnergyReset: state.lastEnergyReset,
+                selectedLevel: state.selectedLevel, // Persist user's level choice
+                hasSeenWelcome: state.hasSeenWelcome, // Persist welcome screen state
+                testScore: state.testScore, // Persist test score
+                recommendedLevel: state.recommendedLevel, // Persist recommendation
                 // Don't persist currentDeck (will be regenerated)
+                // Don't persist isInTest (transient state)
             }),
             // Custom merge to handle Set serialization
-            merge: (persistedState: any, currentState) => {
+            merge: (persistedState: unknown, currentState) => {
+                const persisted = persistedState as Partial<LexicaStore> & { learnedWords?: string[] | Set<string> };
                 return {
                     ...currentState,
-                    ...persistedState,
-                    // Convert Array back to Set
-                    learnedWords: new Set(persistedState?.learnedWords || []),
+                    ...persisted,
+                    learnedWords: new Set(
+                        Array.isArray(persisted?.learnedWords)
+                            ? persisted.learnedWords
+                            : persisted?.learnedWords instanceof Set
+                                ? Array.from(persisted.learnedWords)
+                                : []
+                    ),
                 };
             },
         }

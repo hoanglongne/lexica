@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { BookOpen, Trophy, Save, Sparkles } from 'lucide-react';
 import { useLexicaStore } from '../store/lexicaStore';
 import LearnedWordsList from '../components/LearnedWordsList';
 
@@ -21,9 +22,12 @@ export default function LearnedPage() {
                 </Link>
 
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        📚 Từ đã học
-                    </h1>
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                        <BookOpen className="w-8 h-8 text-cyan-400" />
+                        <h1 className="text-4xl md:text-5xl font-bold text-white">
+                            Từ đã học
+                        </h1>
+                    </div>
                     <div className="flex items-center justify-center gap-8 text-base">
                         <div className="flex items-center gap-2">
                             <span className="text-slate-400">Tổng số:</span>
@@ -32,7 +36,10 @@ export default function LearnedPage() {
                         <div className="w-px h-8 bg-slate-700"></div>
                         <div className="flex items-center gap-2">
                             <span className="text-slate-400">Thành thạo:</span>
-                            <span className="text-yellow-400 font-bold text-2xl">{masteredCount} 🏆</span>
+                            <span className="text-yellow-400 font-bold text-2xl flex items-center gap-1.5">
+                                {masteredCount}
+                                <Trophy className="w-5 h-5" />
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -46,7 +53,7 @@ export default function LearnedPage() {
                         </div>
                         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-gradient-to-r from-cyan-500 to-yellow-400 transition-all duration-500"
+                                className="h-full bg-linear-to-r from-cyan-500 to-yellow-400 transition-all duration-500"
                                 style={{ width: `${(masteredCount / learnedCount) * 100}%` }}
                             ></div>
                         </div>
@@ -61,11 +68,13 @@ export default function LearnedPage() {
 
             {/* Footer Info */}
             <div className="max-w-2xl mx-auto mt-12 text-center space-y-2">
-                <p className="text-xs text-slate-500">
-                    💾 Dữ liệu được lưu an toàn trong localStorage
+                <p className="text-xs text-slate-500 flex items-center justify-center gap-1.5">
+                    <Save className="w-3.5 h-3.5" />
+                    Dữ liệu được lưu an toàn trong localStorage
                 </p>
-                <p className="text-xs text-slate-600">
-                    Mỗi ngày bạn học, bộ não sẽ mạnh hơn một chút ✨
+                <p className="text-xs text-slate-600 flex items-center justify-center gap-1.5">
+                    Mỗi ngày bạn học, bộ não sẽ mạnh hơn một chút
+                    <Sparkles className="w-3.5 h-3.5" />
                 </p>
             </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PartyPopper, Check, X } from 'lucide-react';
 import VocabCard, { VocabCardData } from './VocabCard';
 import { useLexicaStore } from '../store/lexicaStore';
 
@@ -29,7 +30,7 @@ export default function SwipeDeck() {
     const handleSwipe = (direction: 'left' | 'right', cardId: string) => {
         // Check energy
         if (energy <= 0) {
-            alert('⚡ No energy left! Come back tomorrow.');
+            alert('No energy left! Come back tomorrow.');
             return;
         }
 
@@ -59,9 +60,9 @@ export default function SwipeDeck() {
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="text-8xl mb-6"
+                    className="mb-6"
                 >
-                    🎉
+                    <PartyPopper className="w-24 h-24 text-yellow-400 mx-auto" />
                 </motion.div>
                 <h2 className="text-3xl font-bold text-cyan-400 mb-4">
                     Deck Complete!
@@ -89,12 +90,18 @@ export default function SwipeDeck() {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="absolute z-50 text-6xl font-bold"
+                        className="absolute z-50 flex items-center gap-2 text-4xl font-bold"
                     >
                         {lastSwipeDirection === 'right' ? (
-                            <span className="text-green-400">✓ REMEMBER</span>
+                            <span className="flex items-center gap-2 text-green-400">
+                                <Check className="w-12 h-12" />
+                                REMEMBER
+                            </span>
                         ) : (
-                            <span className="text-red-400">✗ FORGET</span>
+                            <span className="flex items-center gap-2 text-red-400">
+                                <X className="w-12 h-12" />
+                                FORGET
+                            </span>
                         )}
                     </motion.div>
                 )}
