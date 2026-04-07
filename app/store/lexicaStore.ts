@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { VocabCardData, DifficultyLevel } from '../components/VocabCard';
 import { UserStats, UserCardProgress, recordSwipe, generateInitialDeck, updateCardProgress } from '../lib/eloAlgorithm';
+import { getStoryForProgress } from '../data/stories';
 
 /**
  * LEXICA Global State Store (Zustand + localStorage persistence)
@@ -11,6 +12,7 @@ import { UserStats, UserCardProgress, recordSwipe, generateInitialDeck, updateCa
  * - Current card deck
  * - Energy system (30 max, resets at midnight)
  * - Selected difficulty level
+ * - Story Mode progress
  */
 
 interface LexicaStore {
@@ -40,6 +42,13 @@ interface LexicaStore {
     testScore: number | null; // Test score (0-5)
     recommendedLevel: DifficultyLevel | null; // AI recommended level from test
 
+    // Story Mode
+    unlockedStories: string[]; // IDs of stories user has unlocked
+    readStories: string[]; // IDs of stories user has read
+    currentStoryId: string | null; // Currently viewing story
+    showStoryUnlock: boolean; // Show "Story Unlocked!" modal
+    showStoryMode: boolean; // Show story reading screen
+
     // Actions
     swipeCard: (cardId: string, direction: 'left' | 'right') => void;
     consumeEnergy: () => boolean; // Returns false if not enough energy
@@ -53,6 +62,14 @@ interface LexicaStore {
     skipToManual: () => void;
     completeTest: (score: number, recommendedLevel: DifficultyLevel) => void;
     acceptRecommendedLevel: () => void;
+
+    // Story Mode actions
+    checkStoryUnlock: () => void; // Check if user should unlock a new story
+    openStoryUnlockModal: (storyId: string) => void;
+    closeStoryUnlockModal: () => void;
+    openStory: (storyId: string) => void;
+    closeStory: () => void;
+    markStoryAsRead: (storyId: string) => void;
 
     // Helpers
     getLearnedWordsCount: () => number;
@@ -105,6 +122,13 @@ export const useLexicaStore = create<LexicaStore>()(
             testScore: null,
             recommendedLevel: null,
 
+            // Story Mode state
+            unlockedStories: [],
+            readStories: [],
+            currentStoryId: null,
+            showStoryUnlock: false,
+            showStoryMode: false,
+
 
             // Swipe card action
             swipeCard: (cardId, direction) => {
@@ -135,9 +159,11 @@ export const useLexicaStore = create<LexicaStore>()(
                     currentDeck: updatedDeck,
                 });
 
-                // If deck is empty, load new deck (Story Mode trigger point)
+                // Check if user should unlock a story (every 10 words)
+                get().checkStoryUnlock();
+
+                // If deck is empty, load new deck
                 if (updatedDeck.length === 0) {
-                    // Note: Phase 5 will add Story Mode UI here
                     get().loadNewDeck();
                 }
             },
@@ -188,6 +214,12 @@ export const useLexicaStore = create<LexicaStore>()(
                     isInTest: false,
                     testScore: null,
                     recommendedLevel: null,
+                    // Reset Story Mode state
+                    unlockedStories: [],
+                    readStories: [],
+                    currentStoryId: null,
+                    showStoryUnlock: false,
+                    showStoryMode: false,
                 });
             },
 
@@ -245,6 +277,56 @@ export const useLexicaStore = create<LexicaStore>()(
                     progress => progress.state === 'mastered'
                 ).length;
             },
+
+            // Story Mode: Check if user should unlock a new story
+            checkStoryUnlock: () => {
+                const { learnedWords, unlockedStories } = get();
+                const learnedWordsList = Array.from(learnedWords);
+
+                // Check if there's an available story
+                const availableStory = getStoryForProgress(learnedWordsList, unlockedStories);
+
+                if (availableStory) {
+                    // User has unlocked a new story!
+                    get().openStoryUnlockModal(availableStory.id);
+                }
+            },
+
+            openStoryUnlockModal: (storyId) => {
+                set({
+                    currentStoryId: storyId,
+                    showStoryUnlock: true,
+                    unlockedStories: [...get().unlockedStories, storyId],
+                });
+            },
+
+            closeStoryUnlockModal: () => {
+                set({ showStoryUnlock: false });
+            },
+
+            openStory: (storyId) => {
+                set({
+                    currentStoryId: storyId,
+                    showStoryMode: true,
+                    showStoryUnlock: false,
+                });
+            },
+
+            closeStory: () => {
+                set({
+                    showStoryMode: false,
+                    currentStoryId: null,
+                });
+            },
+
+            markStoryAsRead: (storyId) => {
+                const { readStories } = get();
+                if (!readStories.includes(storyId)) {
+                    set({
+                        readStories: [...readStories, storyId],
+                    });
+                }
+            },
         }),
         {
             name: 'lexica-storage', // localStorage key
@@ -259,8 +341,12 @@ export const useLexicaStore = create<LexicaStore>()(
                 hasSeenWelcome: state.hasSeenWelcome, // Persist welcome screen state
                 testScore: state.testScore, // Persist test score
                 recommendedLevel: state.recommendedLevel, // Persist recommendation
+                // Story Mode persistence
+                unlockedStories: state.unlockedStories,
+                readStories: state.readStories,
                 // Don't persist currentDeck (will be regenerated)
                 // Don't persist isInTest (transient state)
+                // Don't persist showStoryUnlock, showStoryMode (transient UI state)
             }),
             // Custom merge to handle Set serialization
             merge: (persistedState: unknown, currentState) => {

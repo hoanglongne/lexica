@@ -25,13 +25,18 @@ interface VocabCardProps {
     card: VocabCardData;
     index: number;
     onSwipe: (direction: 'left' | 'right') => void;
+    revealed?: boolean;    // controlled from SwipeDeck (top card)
+    onReveal?: () => void; // controlled reveal callback
 }
 
-export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
-    const [revealed, setRevealed] = useState(false);
+export default function VocabCard({ card, index, onSwipe, revealed: controlledRevealed, onReveal }: VocabCardProps) {
+    const [internalRevealed, setInternalRevealed] = useState(false);
+
+    // Use controlled state from parent (top card) if provided, otherwise internal
+    const revealed = controlledRevealed !== undefined ? controlledRevealed : internalRevealed;
+    const handleReveal = onReveal ?? (() => setInternalRevealed(true));
 
     const isBossCard = card.isBossCard || false;
-
     // Text-to-Speech function
     const speakWord = () => {
         if ('speechSynthesis' in window) {
@@ -136,15 +141,22 @@ export default function VocabCard({ card, index, onSwipe }: VocabCardProps) {
                 {/* Reveal prompt or meaning */}
                 <div className="absolute bottom-6 left-6 right-6">
                     {!revealed ? (
-                        <button
-                            onClick={() => setRevealed(true)}
-                            className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 hover:bg-slate-600 transition-colors active:scale-95 flex items-center justify-center gap-2"
-                        >
-                            <Eye className="w-4 h-4 text-slate-300" />
-                            <p className="text-sm text-slate-300 text-center font-medium">
-                                Nhấn để xem nghĩa
-                            </p>
-                        </button>
+                        <div className="space-y-2">
+                            <button
+                                onClick={handleReveal}
+                                className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 hover:bg-slate-600 transition-colors active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                <Eye className="w-4 h-4 text-slate-300" />
+                                <p className="text-sm text-slate-300 text-center font-medium">
+                                    Nhấn để xem nghĩa
+                                </p>
+                            </button>
+                            {index === 0 && (
+                                <p className="text-xs text-slate-500 text-center hidden lg:block">
+                                    Space: Xem nghĩa • ← Quên • → Nhớ
+                                </p>
+                            )}
+                        </div>
                     ) : (
                         <div className="px-4 py-3 rounded-lg bg-slate-700/80 border border-slate-600 w-full">
                             <div className="flex items-center justify-center gap-2 mb-1">

@@ -292,25 +292,33 @@ export function recordSwipe(
 export function getDifficultyAnalysis(userStats: UserStats): {
     struggleRate: number;
     eloRange: [number, number];
-    recommendation: string;
+    status: 'very-hard' | 'challenging' | 'too-easy' | 'easy' | 'perfect';
+    message: string;
 } {
     const struggleRate = calculateStruggleRate(userStats.recentSwipes);
     const eloRange = getAdaptiveEloRange(userStats.currentElo, struggleRate);
 
-    let recommendation = '';
+    let status: 'very-hard' | 'challenging' | 'too-easy' | 'easy' | 'perfect';
+    let message = '';
+
     if (struggleRate >= 70) {
-        recommendation = '🔴 Very Hard - Reducing difficulty significantly';
+        status = 'very-hard';
+        message = 'Very Hard - Reducing difficulty significantly';
     } else if (struggleRate >= 50) {
-        recommendation = '🟠 Challenging - Lowering difficulty slightly';
+        status = 'challenging';
+        message = 'Challenging - Lowering difficulty slightly';
     } else if (struggleRate <= 20) {
-        recommendation = '🟢 Too Easy - Increasing difficulty significantly';
+        status = 'too-easy';
+        message = 'Too Easy - Increasing difficulty significantly';
     } else if (struggleRate <= 35) {
-        recommendation = '🟡 Easy - Raising difficulty slightly';
+        status = 'easy';
+        message = 'Easy - Raising difficulty slightly';
     } else {
-        recommendation = '✅ Perfect Flow State - Maintaining balance';
+        status = 'perfect';
+        message = 'Perfect Flow State - Maintaining balance';
     }
 
-    return { struggleRate, eloRange, recommendation };
+    return { struggleRate, eloRange, status, message };
 }
 
 /**

@@ -1,13 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Trophy, Save, Sparkles } from 'lucide-react';
+import { BookOpen, Trophy, Save, Sparkles, BookMarked } from 'lucide-react';
 import { useLexicaStore } from '../store/lexicaStore';
+import { STORIES } from '../data/stories';
 import LearnedWordsList from '../components/LearnedWordsList';
+import StoryUnlockModal from '../components/StoryUnlockModal';
+import StoryMode from '../components/StoryMode';
+import { AnimatePresence } from 'framer-motion';
 
 export default function LearnedPage() {
     const learnedCount = useLexicaStore(state => state.learnedWords.size);
     const masteredCount = useLexicaStore(state => state.getMasteredWordsCount());
+    const unlockedStories = useLexicaStore(state => state.unlockedStories);
+    const readStories = useLexicaStore(state => state.readStories);
+    const openStory = useLexicaStore(state => state.openStory);
+    const showStoryUnlock = useLexicaStore(state => state.showStoryUnlock);
+    const showStoryMode = useLexicaStore(state => state.showStoryMode);
+    const currentStoryId = useLexicaStore(state => state.currentStoryId);
+    const closeStory = useLexicaStore(state => state.closeStory);
+    const closeStoryUnlockModal = useLexicaStore(state => state.closeStoryUnlockModal);
+    const markStoryAsRead = useLexicaStore(state => state.markStoryAsRead);
 
     return (
         <div className="min-h-screen bg-slate-900 px-4 py-8">
@@ -61,6 +74,67 @@ export default function LearnedPage() {
                 )}
             </div>
 
+            {/* Stories Section */}
+            {unlockedStories.length > 0 && (
+                <div className="mb-8 bg-slate-800/30 border border-slate-700 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <BookMarked className="w-6 h-6 text-cyan-400" />
+                        <h2 className="text-2xl font-bold text-white">Unlocked Stories</h2>
+                    </div>
+
+                    <div className="space-y-3">
+                        {unlockedStories.map((storyId) => {
+                            const story = STORIES.find(s => s.id === storyId);
+                            if (!story) return null;
+
+                            const isRead = readStories.includes(storyId);
+
+                            return (
+                                <button
+                                    key={storyId}
+                                    onClick={() => openStory(storyId)}
+                                    className="w-full px-4 py-4 rounded-lg bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 hover:border-cyan-500/50 transition-all text-left group"
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <BookMarked className={`w-5 h-5 ${isRead ? 'text-slate-500' : 'text-cyan-400'}`} />
+                                                <span className={`text-lg font-semibold ${isRead ? 'text-slate-400' : 'text-white'}`}>
+                                                    {story.title}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-3 ml-8">
+                                                <span className="text-sm text-slate-500">
+                                                    {story.difficultyLevel === 'beginner' ? 'Cơ bản' :
+                                                        story.difficultyLevel === 'intermediate' ? 'Trung cấp' :
+                                                            story.difficultyLevel === 'advanced' ? 'Nâng cao' : 'Chuyên gia'}
+                                                </span>
+                                                <span className="text-slate-600">•</span>
+                                                <span className="text-sm text-slate-500">
+                                                    {story.vocabularyIds.length} words
+                                                </span>
+                                                {!isRead && (
+                                                    <>
+                                                        <span className="text-slate-600">•</span>
+                                                        <span className="px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-medium">
+                                                            Unread
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <p className="text-xs text-slate-500 mt-4 text-center">
+                        Unlock 1 new story for every 10 words learned
+                    </p>
+                </div>
+            )}
+
             {/* Learned Words List */}
             <div className="max-w-2xl mx-auto">
                 <LearnedWordsList />
@@ -77,6 +151,35 @@ export default function LearnedPage() {
                     <Sparkles className="w-3.5 h-3.5" />
                 </p>
             </div>
+
+            {/* Story Unlock Modal */}
+            <AnimatePresence>
+                {showStoryUnlock && currentStoryId && (
+                    <StoryUnlockModal
+                        storyId={currentStoryId}
+                        onReadNow={() => {
+                            if (currentStoryId) {
+                                openStory(currentStoryId);
+                            }
+                        }}
+                        onClose={closeStoryUnlockModal}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Story Mode */}
+            {showStoryMode && currentStoryId && (
+                <StoryMode
+                    storyId={currentStoryId}
+                    onClose={closeStory}
+                    onFinish={() => {
+                        if (currentStoryId) {
+                            markStoryAsRead(currentStoryId);
+                        }
+                        closeStory();
+                    }}
+                />
+            )}
         </div>
     );
 }

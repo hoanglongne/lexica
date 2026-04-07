@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PartyPopper, Check, X } from 'lucide-react';
-import VocabCard, { VocabCardData } from './VocabCard';
+import VocabCard from './VocabCard';
 import { useLexicaStore } from '../store/lexicaStore';
 
 export default function SwipeDeck() {
@@ -13,46 +14,65 @@ export default function SwipeDeck() {
     const energy = useLexicaStore(state => state.energy);
 
     const [lastSwipeDirection, setLastSwipeDirection] = useState<'left' | 'right' | null>(null);
+    const [cardExitDirections, setCardExitDirections] = useState<Record<string, 'left' | 'right'>>({});
 
-    // Pre-compute exit directions based on card ID (deterministic)
-    const exitDirections = useMemo(() => {
-        return cards.reduce((acc, card, index) => {
-            const direction = index % 2 === 0 ? 1 : -1;
-            acc[card.id] = {
-                x: direction * 500,
-                y: 200,
-                rotate: direction * 25,
-            };
-            return acc;
-        }, {} as Record<string, { x: number; y: number; rotate: number }>);
-    }, [cards]);
+    // Revealed state for top card, controlled here so keyboard handler can access it
+    const [topCardRevealed, setTopCardRevealed] = useState(false);
+    const topCardId = cards[0]?.id;
 
-    const handleSwipe = (direction: 'left' | 'right', cardId: string) => {
-        // Check energy
+    // Reset revealed state when the top card changes
+    useEffect(() => {
+        setTopCardRevealed(false);
+    }, [topCardId]);
+
+    const handleSwipe = useCallback((direction: 'left' | 'right', cardId: string) => {
         if (energy <= 0) {
             alert('No energy left! Come back tomorrow.');
             return;
         }
 
-        // Consume energy
         const hasEnergy = consumeEnergy();
         if (!hasEnergy) return;
 
         setLastSwipeDirection(direction);
-
-        // Show feedback briefly
         setTimeout(() => setLastSwipeDirection(null), 1000);
 
-        // Record swipe in store (updates ELO, stats, removes card)
-        swipeCard(cardId, direction);
+        // flushSync forces a synchronous re-render with the correct exit direction
+        // BEFORE swipeCard removes the card, so AnimatePresence snapshots the right values
+        flushSync(() => {
+            setCardExitDirections(prev => ({ ...prev, [cardId]: direction }));
+        });
 
-        // Play sound effect (optional)
-        if (direction === 'right') {
-            console.log('✅ Remembered!');
-        } else {
-            console.log('❌ Forgot!');
-        }
-    };
+        swipeCard(cardId, direction);
+    }, [energy, consumeEnergy, swipeCard]);
+
+    // Keyboard controls (desktop)
+    useEffect(() => {
+        if (!topCardId) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+            if (e.key === ' ') {
+                e.preventDefault();
+                setTopCardRevealed(true);
+                return;
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                handleSwipe('left', topCardId);
+                return;
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                handleSwipe('right', topCardId);
+                return;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [topCardId, handleSwipe]);
 
     if (cards.length === 0) {
         return (
@@ -111,14 +131,18 @@ export default function SwipeDeck() {
                 {cards.map((card, index) => {
                     if (index > 2) return null; // Only show top 3 cards for performance
 
+                    // Get exit direction for this card (left = negative, right = positive)
+                    const exitDirection = cardExitDirections[card.id];
+                    const xMultiplier = exitDirection === 'left' ? -1 : 1;
+
                     return (
                         <motion.div
                             key={card.id}
                             exit={{
-                                x: exitDirections[card.id]?.x || 500,
-                                y: exitDirections[card.id]?.y || 200,
+                                x: xMultiplier * 500,
+                                y: 200,
                                 opacity: 0,
-                                rotate: exitDirections[card.id]?.rotate || 25,
+                                rotate: xMultiplier * 25,
                                 transition: { duration: 0.5, ease: 'easeInOut' },
                             }}
                             className="absolute w-full top-1/2 -translate-y-1/2"
@@ -127,6 +151,8 @@ export default function SwipeDeck() {
                                 card={card}
                                 index={index}
                                 onSwipe={(direction) => handleSwipe(direction, card.id)}
+                                revealed={index === 0 ? topCardRevealed : undefined}
+                                onReveal={index === 0 ? () => setTopCardRevealed(true) : undefined}
                             />
                         </motion.div>
                     );

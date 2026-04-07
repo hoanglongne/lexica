@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { TrendingUp, MousePointerClick, Target, BookOpen, Award, Clock, Settings, RotateCcw, ArrowRight, X } from 'lucide-react';
+import { TrendingUp, MousePointerClick, Target, BookOpen, Award, Clock, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import EnergyBar from './components/EnergyBar';
 import SwipeDeck from './components/SwipeDeck';
@@ -10,6 +10,8 @@ import LevelSelector from './components/LevelSelector';
 import LevelTestWelcome from './components/LevelTestWelcome';
 import LevelTest from './components/LevelTest';
 import LevelTestResult from './components/LevelTestResult';
+import StoryUnlockModal from './components/StoryUnlockModal';
+import StoryMode from './components/StoryMode';
 import { useLexicaStore, initializeLexicaStore } from './store/lexicaStore';
 import { getDifficultyAnalysis, getProgressStats } from './lib/eloAlgorithm';
 
@@ -32,8 +34,21 @@ export default function Home() {
   const acceptRecommendedLevel = useLexicaStore(state => state.acceptRecommendedLevel);
   const resetProgress = useLexicaStore(state => state.resetProgress);
 
+  // Story Mode state
+  const showStoryUnlock = useLexicaStore(state => state.showStoryUnlock);
+  const showStoryMode = useLexicaStore(state => state.showStoryMode);
+  const currentStoryId = useLexicaStore(state => state.currentStoryId);
+  const openStory = useLexicaStore(state => state.openStory);
+  const closeStory = useLexicaStore(state => state.closeStory);
+  const closeStoryUnlockModal = useLexicaStore(state => state.closeStoryUnlockModal);
+  const markStoryAsRead = useLexicaStore(state => state.markStoryAsRead);
+
   // Mobile stats modal state
   const [showMobileStats, setShowMobileStats] = useState(false);
+
+  // Difficulty status notification state
+  const [showDifficultyStatus, setShowDifficultyStatus] = useState(false);
+  const previousStatusRef = useRef<string | null>(null);
 
   // Initialize store on mount
   useEffect(() => {
@@ -43,6 +58,87 @@ export default function Home() {
   // Debug: Get difficulty analysis
   const analysis = getDifficultyAnalysis(userStats);
   const progressStats = getProgressStats(cardProgress);
+
+  // Get status icon and color
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'very-hard':
+        return {
+          icon: AlertCircle,
+          color: 'text-red-400',
+          bgColor: 'bg-red-500/10',
+          borderColor: 'border-red-500/30',
+        };
+      case 'challenging':
+        return {
+          icon: TrendingDown,
+          color: 'text-orange-400',
+          bgColor: 'bg-orange-500/10',
+          borderColor: 'border-orange-500/30',
+        };
+      case 'too-easy':
+        return {
+          icon: TrendingUp,
+          color: 'text-green-400',
+          bgColor: 'bg-green-500/10',
+          borderColor: 'border-green-500/30',
+        };
+      case 'easy':
+        return {
+          icon: TrendingUp,
+          color: 'text-yellow-400',
+          bgColor: 'bg-yellow-500/10',
+          borderColor: 'border-yellow-500/30',
+        };
+      case 'perfect':
+        return {
+          icon: Zap,
+          color: 'text-cyan-400',
+          bgColor: 'bg-cyan-500/10',
+          borderColor: 'border-cyan-500/30',
+        };
+      default:
+        return {
+          icon: Check,
+          color: 'text-slate-400',
+          bgColor: 'bg-slate-500/10',
+          borderColor: 'border-slate-500/30',
+        };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay(analysis.status);
+
+  // Track status changes and show notification
+  useEffect(() => {
+    const previousStatus = previousStatusRef.current;
+
+    // Only show if status actually changed (not initial load)
+    if (previousStatus !== null && previousStatus !== analysis.status) {
+      // Schedule state update for next tick to avoid cascading renders
+      const showTimer = setTimeout(() => {
+        setShowDifficultyStatus(true);
+      }, 0);
+
+      // Auto-hide after 5 seconds
+      const hideTimer = setTimeout(() => {
+        setShowDifficultyStatus(false);
+      }, 5000);
+
+      // Update ref for next comparison
+      previousStatusRef.current = analysis.status;
+
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+      };
+    }
+
+    // Set initial value
+    if (previousStatus === null) {
+      previousStatusRef.current = analysis.status;
+    }
+  }, [analysis.status]);
 
   // FLOW: Welcome Screen (first time only)
   if (!hasSeenWelcome && selectedLevel === null) {
@@ -96,7 +192,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-slate-900">
+    <div className="relative h-screen flex flex-col bg-slate-900 overflow-hidden">
       {/* Logo - Top Left */}
       <div className="hidden lg:block fixed top-4 left-4 md:top-6 md:left-6 z-50">
         <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
@@ -108,62 +204,66 @@ export default function Home() {
       <EnergyBar currentEnergy={energy} maxEnergy={maxEnergy} />
 
       {/* Main Content Area - Two Column Layout on Desktop */}
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 px-4 pt-20 pb-8 max-w-6xl mx-auto w-full">
+      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 px-4 pt-16 pb-4 lg:pt-20 lg:pb-8 max-w-6xl mx-auto w-full overflow-hidden">
 
         {/* Left Column - Swipe Deck */}
-        <div className="w-full lg:flex-1 lg:max-w-lg flex flex-col items-center justify-between min-h-[calc(100vh-180px)] lg:min-h-150">
+        <div className="w-full lg:flex-1 lg:max-w-lg flex flex-col items-center justify-between h-full lg:min-h-150">
           {/* Swipe Deck */}
           <div className="w-full max-w-md flex-1 flex items-center justify-center">
             <SwipeDeck />
           </div>
+
+          {/* Difficulty Status Notification */}
+          <AnimatePresence>
+            {showDifficultyStatus && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="w-full max-w-md mt-6"
+              >
+                <div className={`flex items-start gap-3 p-4 rounded-xl border-2 ${statusDisplay.bgColor} ${statusDisplay.borderColor} shadow-lg backdrop-blur-sm`}>
+                  <statusDisplay.icon className={`w-6 h-6 ${statusDisplay.color} shrink-0 mt-0.5`} />
+                  <div className="flex-1">
+                    <p className={`text-base font-bold ${statusDisplay.color}`}>
+                      {analysis.message.split(' - ')[0]}
+                    </p>
+                    <p className="text-sm text-slate-300 mt-1">
+                      {analysis.message.split(' - ')[1]}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowDifficultyStatus(false)}
+                    className="p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-slate-400" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Right Column - Stats Sidebar */}
         <div className="w-full lg:w-72 xl:w-80 shrink-0">
-          {/* Mobile Compact Stats - Icon Buttons */}
-          <div className="lg:hidden flex items-center justify-center gap-1.5 mb-4">
+          {/* Mobile Action Bar */}
+          <div className="lg:hidden flex items-center justify-center gap-2 mb-4">
+            {/* Stats Button */}
             <button
-              className="shrink-0 p-1.5 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95"
+              className="flex-1 p-2 px-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95 flex items-center justify-center gap-2"
               onClick={() => setShowMobileStats(true)}
             >
-              <TrendingUp className="w-4 h-4 text-cyan-400" />
+              <BarChart3 className="w-4 h-4 text-cyan-400" />
+              <span className="text-slate-300 text-sm font-medium">Xem thống kê</span>
             </button>
-            <button
-              className="shrink-0 p-1.5 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95"
-              onClick={() => setShowMobileStats(true)}
-            >
-              <MousePointerClick className="w-4 h-4 text-slate-400" />
-            </button>
-            <button
-              className="shrink-0 p-1.5 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95"
-              onClick={() => setShowMobileStats(true)}
-            >
-              <Target className="w-4 h-4 text-slate-400" />
-            </button>
-            <button
-              className="shrink-0 p-1.5 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95"
-              onClick={() => setShowMobileStats(true)}
-            >
-              <BookOpen className="w-4 h-4 text-cyan-400" />
-            </button>
-            <button
-              className="shrink-0 p-1.5 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95"
-              onClick={() => setShowMobileStats(true)}
-            >
-              <Award className="w-4 h-4 text-slate-400" />
-            </button>
-            <button
-              className="shrink-0 p-1.5 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95"
-              onClick={() => setShowMobileStats(true)}
-            >
-              <Clock className="w-4 h-4 text-slate-400" />
-            </button>
-            
-            {/* Learned Words Link - Compact */}
+
+            {/* Learned Words Link */}
             <Link href="/learned" className="shrink-0">
-              <div className="p-1.5 px-2.5 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-cyan-500 transition-colors active:scale-95 cursor-pointer flex items-center gap-1.5">
-                <span className="text-slate-300 text-xs font-medium whitespace-nowrap">Đã học</span>
-                <span className="text-cyan-400 text-xs font-semibold">({learnedCount})</span>
+              <div className="p-2 px-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-cyan-500 transition-colors active:scale-95 cursor-pointer flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-cyan-400" />
+                <span className="text-slate-300 text-sm font-medium whitespace-nowrap">Đã học</span>
+                <span className="text-cyan-400 text-sm font-semibold">({learnedCount})</span>
               </div>
             </Link>
           </div>
@@ -238,15 +338,6 @@ export default function Home() {
                 <span className="text-white font-semibold">{progressStats.dueToday}</span>
               </div>
             </div>
-
-            {/* Difficulty Status */}
-            {analysis.recommendation && (
-              <div className="pt-4 border-t border-slate-700">
-                <p className="text-slate-400 text-xs leading-relaxed">
-                  {analysis.recommendation}
-                </p>
-              </div>
-            )}
 
             {/* Learned Words Link - Desktop */}
             <div className="pt-4 border-t border-slate-700">
@@ -386,15 +477,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Difficulty Status */}
-                {analysis.recommendation && (
-                  <div className="pt-4 border-t border-slate-700">
-                    <p className="text-slate-400 text-xs leading-relaxed">
-                      {analysis.recommendation}
-                    </p>
-                  </div>
-                )}
-
                 {/* Action Buttons */}
                 <div className="space-y-2 pt-4 border-t border-slate-700">
                   <button
@@ -423,6 +505,35 @@ export default function Home() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Story Unlock Modal */}
+      <AnimatePresence>
+        {showStoryUnlock && currentStoryId && (
+          <StoryUnlockModal
+            storyId={currentStoryId}
+            onReadNow={() => {
+              if (currentStoryId) {
+                openStory(currentStoryId);
+              }
+            }}
+            onClose={closeStoryUnlockModal}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Story Mode */}
+      {showStoryMode && currentStoryId && (
+        <StoryMode
+          storyId={currentStoryId}
+          onClose={closeStory}
+          onFinish={() => {
+            if (currentStoryId) {
+              markStoryAsRead(currentStoryId);
+            }
+            closeStory();
+          }}
+        />
+      )}
     </div>
   );
 }
