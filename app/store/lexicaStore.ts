@@ -49,6 +49,10 @@ interface LexicaStore {
     showStoryUnlock: boolean; // Show "Story Unlocked!" modal
     showStoryMode: boolean; // Show story reading screen
 
+    // Swipe Mode
+    swipeMode: 'touch' | 'voice';
+    setSwipeMode: (mode: 'touch' | 'voice') => void;
+
     // Actions
     swipeCard: (cardId: string, direction: 'left' | 'right') => void;
     consumeEnergy: () => boolean; // Returns false if not enough energy
@@ -115,6 +119,8 @@ export const useLexicaStore = create<LexicaStore>()(
             lastEnergyReset: getMidnightTimestamp(),
             currentDeck: [],
             selectedLevel: null, // User hasn't selected level yet
+            swipeMode: 'touch',
+            setSwipeMode: (mode) => set({ swipeMode: mode }),
 
             // Test flow state
             hasSeenWelcome: false,

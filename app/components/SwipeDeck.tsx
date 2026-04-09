@@ -13,19 +13,28 @@ export default function SwipeDeck() {
     const consumeEnergy = useLexicaStore(state => state.consumeEnergy);
     const energy = useLexicaStore(state => state.energy);
 
+    const swipeMode = useLexicaStore(state => state.swipeMode);
+
     const [lastSwipeDirection, setLastSwipeDirection] = useState<'left' | 'right' | null>(null);
     const [cardExitDirections, setCardExitDirections] = useState<Record<string, 'left' | 'right'>>({});
 
     // Revealed state for top card, controlled here so keyboard handler can access it
-    const [topCardRevealed, setTopCardRevealed] = useState(false);
     const topCardId = cards[0]?.id;
-
-    // Reset revealed state when the top card changes
-    useEffect(() => {
-        setTopCardRevealed(false);
+    const [revealedForCardId, setRevealedForCardId] = useState<string | null>(null);
+    const topCardRevealed = revealedForCardId === topCardId;
+    const setTopCardRevealed = useCallback((val: boolean) => {
+        setRevealedForCardId(val ? topCardId ?? null : null);
     }, [topCardId]);
 
-    const handleSwipe = useCallback((direction: 'left' | 'right', cardId: string) => {
+    const handleSwipe = useCallback((
+        direction: 'left' | 'right',
+        cardId: string,
+        source: 'manual' | 'voice' = 'manual'
+    ) => {
+        if (swipeMode === 'voice' && direction === 'right' && source !== 'voice') {
+            return;
+        }
+
         if (energy <= 0) {
             alert('No energy left! Come back tomorrow.');
             return;
@@ -44,7 +53,7 @@ export default function SwipeDeck() {
         });
 
         swipeCard(cardId, direction);
-    }, [energy, consumeEnergy, swipeCard]);
+    }, [energy, consumeEnergy, swipeCard, swipeMode]);
 
     // Keyboard controls (desktop)
     useEffect(() => {
@@ -71,13 +80,16 @@ export default function SwipeDeck() {
 
             if (e.key === 'ArrowRight') {
                 e.preventDefault();
+                if (swipeMode === 'voice') {
+                    return;
+                }
                 handleSwipe('right', topCardId);
             }
         };
 
         document.addEventListener('keydown', handleKeyDown, true);
         return () => document.removeEventListener('keydown', handleKeyDown, true);
-    }, [topCardId, handleSwipe]);
+    }, [topCardId, handleSwipe, swipeMode, setTopCardRevealed]);
 
     if (cards.length === 0) {
         return (
@@ -107,6 +119,7 @@ export default function SwipeDeck() {
 
     return (
         <div className="relative w-full h-100 flex items-center justify-center">
+            {/* Mode Toggle */}
             {/* Swipe Feedback */}
             <AnimatePresence>
                 {lastSwipeDirection && (
@@ -151,11 +164,12 @@ export default function SwipeDeck() {
                                 transition: { duration: 0.5, ease: 'easeInOut' },
                             }}
                             className="absolute w-full top-1/2 -translate-y-1/2"
+                            style={{ zIndex: cards.length - index }}
                         >
                             <VocabCard
                                 card={card}
                                 index={index}
-                                onSwipe={(direction) => handleSwipe(direction, card.id)}
+                                onSwipe={(direction, source) => handleSwipe(direction, card.id, source)}
                                 revealed={index === 0 ? topCardRevealed : undefined}
                                 onReveal={index === 0 ? () => setTopCardRevealed(true) : undefined}
                             />

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { TrendingUp, MousePointerClick, Target, BookOpen, Award, Clock, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check } from 'lucide-react';
+import { TrendingUp, MousePointerClick, Target, BookOpen, Award, Clock, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check, Mic, Hand } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import EnergyBar from './components/EnergyBar';
 import SwipeDeck from './components/SwipeDeck';
@@ -26,6 +26,7 @@ export default function Home() {
   const isInTest = useLexicaStore(state => state.isInTest);
   const testScore = useLexicaStore(state => state.testScore);
   const recommendedLevel = useLexicaStore(state => state.recommendedLevel);
+  const swipeMode = useLexicaStore(state => state.swipeMode);
 
   const setSelectedLevel = useLexicaStore(state => state.setSelectedLevel);
   const startTest = useLexicaStore(state => state.startTest);
@@ -33,6 +34,7 @@ export default function Home() {
   const completeTest = useLexicaStore(state => state.completeTest);
   const acceptRecommendedLevel = useLexicaStore(state => state.acceptRecommendedLevel);
   const resetProgress = useLexicaStore(state => state.resetProgress);
+  const setSwipeMode = useLexicaStore(state => state.setSwipeMode);
 
   // Story Mode state
   const showStoryUnlock = useLexicaStore(state => state.showStoryUnlock);
@@ -108,6 +110,7 @@ export default function Home() {
   };
 
   const statusDisplay = getStatusDisplay(analysis.status);
+  const isVoiceMode = swipeMode === 'voice';
 
   // Track status changes and show notification
   useEffect(() => {
@@ -203,6 +206,17 @@ export default function Home() {
       {/* Energy Bar Header */}
       <EnergyBar currentEnergy={energy} maxEnergy={maxEnergy} />
 
+      {/* Mobile Quick Level Switch */}
+      <div className="lg:hidden fixed top-18 right-4 z-40">
+        <button
+          onClick={() => setSelectedLevel(null)}
+          className="px-3 py-2 rounded-lg bg-slate-800/90 border border-slate-700 hover:border-cyan-500 text-slate-200 text-xs font-medium transition-colors flex items-center gap-1.5"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          Đổi level
+        </button>
+      </div>
+
       {/* Main Content Area - Two Column Layout on Desktop */}
       <main className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 px-4 pt-16 pb-4 lg:pt-20 lg:pb-8 max-w-6xl mx-auto w-full overflow-hidden">
 
@@ -277,6 +291,25 @@ export default function Home() {
               <span className="text-white font-semibold">
                 {selectedLevel === 'all' ? 'Tất cả' : selectedLevel === 'beginner' ? 'Cơ bản' : selectedLevel === 'intermediate' ? 'Trung cấp' : selectedLevel === 'advanced' ? 'Nâng cao' : 'Chuyên gia'}
               </span>
+            </div>
+
+            <div className="space-y-3 pb-4 border-b border-slate-700">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 text-sm">Chế độ swipe</span>
+                <button
+                  onClick={() => setSwipeMode(isVoiceMode ? 'touch' : 'voice')}
+                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${isVoiceMode
+                    ? 'bg-cyan-500/12 border-cyan-400/35 text-cyan-200'
+                    : 'bg-slate-700/40 border-slate-600/50 text-slate-200 hover:border-slate-400/60'
+                    }`}
+                >
+                  {isVoiceMode ? <Mic className="w-3.5 h-3.5" /> : <Hand className="w-3.5 h-3.5" />}
+                  {isVoiceMode ? 'Voice Mode' : 'Touch Mode'}
+                </button>
+              </div>
+              <p className="text-xs text-slate-500">
+                Voice mode bật top card phải đọc đúng 3 lần liên tiếp mới được swipe phải.
+              </p>
             </div>
 
             {/* Performance Stats - Hidden on mobile, shown in compact grid above */}
@@ -415,6 +448,25 @@ export default function Home() {
                   <span className="text-white font-semibold">
                     {selectedLevel === 'all' ? 'Tất cả' : selectedLevel === 'beginner' ? 'Cơ bản' : selectedLevel === 'intermediate' ? 'Trung cấp' : selectedLevel === 'advanced' ? 'Nâng cao' : 'Chuyên gia'}
                   </span>
+                </div>
+
+                <div className="space-y-3 pb-4 border-b border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-sm">Chế độ swipe</span>
+                    <button
+                      onClick={() => setSwipeMode(isVoiceMode ? 'touch' : 'voice')}
+                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${isVoiceMode
+                        ? 'bg-cyan-500/12 border-cyan-400/35 text-cyan-200'
+                        : 'bg-slate-700/40 border-slate-600/50 text-slate-200 hover:border-slate-400/60'
+                        }`}
+                    >
+                      {isVoiceMode ? <Mic className="w-3.5 h-3.5" /> : <Hand className="w-3.5 h-3.5" />}
+                      {isVoiceMode ? 'Voice Mode' : 'Touch Mode'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Voice mode yeu cau top card duoc doc dung 3 lan lien tiep.
+                  </p>
                 </div>
 
                 {/* Performance Stats */}

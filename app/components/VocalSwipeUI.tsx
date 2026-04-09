@@ -7,7 +7,11 @@ import { VocalSwipeState } from '../hooks/useVocalSwipe';
 interface VocalSwipeUIProps {
     state: VocalSwipeState;
     hitsRemaining: number;
+    streakCount: number;
     transcript: string;
+    targetWord: string;
+    lastSpokenWord: string;
+    lastWasCorrect: boolean | null;
     isSupported: boolean;
     permissionDenied: boolean;
     onMicClick: () => void;
@@ -16,7 +20,11 @@ interface VocalSwipeUIProps {
 export default function VocalSwipeUI({
     state,
     hitsRemaining,
+    streakCount,
     transcript,
+    targetWord,
+    lastSpokenWord,
+    lastWasCorrect,
     isSupported,
     permissionDenied,
     onMicClick,
@@ -76,7 +84,8 @@ export default function VocalSwipeUI({
     };
 
     return (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/95 rounded-2xl">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/95 rounded-2xl z-50">
+            {/* Success Confetti */}
             {/* Success Confetti */}
             {state === 'SUCCESS' && (
                 <motion.div
@@ -134,6 +143,26 @@ export default function VocalSwipeUI({
                         Tap the mic and say the word <strong>3 times</strong> correctly
                     </p>
                 )}
+            </div>
+
+            {/* Explicit feedback for control */}
+            <div className="w-full max-w-xs px-6 mb-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Target</span>
+                    <span className="text-cyan-300 font-semibold tracking-wide">{targetWord.toUpperCase()}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Bạn vừa nói</span>
+                    <span className="text-slate-300 font-medium truncate max-w-37.5 text-right">
+                        {lastSpokenWord || '...'}
+                    </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Đúng liên tiếp</span>
+                    <span className={`${lastWasCorrect === false ? 'text-red-400' : 'text-green-400'} font-semibold`}>
+                        {streakCount}/3 {lastWasCorrect === false ? '• sai, reset' : ''}
+                    </span>
+                </div>
             </div>
 
             {/* Progress Indicators */}
