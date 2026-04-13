@@ -5,6 +5,37 @@ import { HandHeart, Sprout, Leaf, Sparkles, Trophy, Volume2 } from 'lucide-react
 import { useLexicaStore } from '../store/lexicaStore';
 import { VOCAB_DATABASE } from '../data/vocabCards';
 
+function formatNextReview(nextReviewAt?: number, isMastered?: boolean) {
+    if (isMastered) {
+        return 'Mastered';
+    }
+
+    if (!nextReviewAt) {
+        return 'Chưa có lịch ôn';
+    }
+
+    const nextReviewDate = new Date(nextReviewAt);
+    const now = new Date();
+    const isToday = nextReviewDate.toDateString() === now.toDateString();
+
+    if (nextReviewAt <= now.getTime()) {
+        return 'Ôn lại: Hôm nay';
+    }
+
+    if (isToday) {
+        return `Ôn lại: ${nextReviewDate.toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+        })}`;
+    }
+
+    return `Ôn lại: ${nextReviewDate.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    })}`;
+}
+
 export default function LearnedWordsList() {
     // Subscribe to size changes only
     const learnedWordsSize = useLexicaStore(state => state.learnedWords.size);
@@ -67,6 +98,11 @@ export default function LearnedWordsList() {
                         mastered: 'text-yellow-400',
                     }[card.progress?.state || 'seed'];
 
+                    const reviewLabel = formatNextReview(
+                        card.progress?.nextReviewAt,
+                        card.progress?.state === 'mastered'
+                    );
+
                     return (
                         <div
                             key={card.id}
@@ -92,6 +128,16 @@ export default function LearnedWordsList() {
                                 <p className="text-xs text-slate-500 font-mono mb-1">/{card.ipa}/</p>
                             )}
                             <p className="text-sm text-slate-400">{card.translationHint}</p>
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                                <span className={`text-xs font-medium ${card.progress?.state === 'mastered' ? 'text-yellow-400' : 'text-slate-500'}`}>
+                                    {reviewLabel}
+                                </span>
+                                {card.progress && card.progress.state !== 'mastered' && (
+                                    <span className="text-[11px] uppercase tracking-wide text-amber-300 bg-amber-400/10 border border-amber-300/15 px-2 py-1 rounded-full">
+                                        Ôn tập
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     );
                 })

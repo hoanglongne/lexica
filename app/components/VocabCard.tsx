@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sprout, Leaf, Sparkles, Trophy, Swords, Eye, Volume2, Check, X as XIcon, Mic } from 'lucide-react';
+import { Sprout, Leaf, Sparkles, Trophy, Swords, Eye, Volume2, Check, X as XIcon, Mic, RotateCcw } from 'lucide-react';
 import { useVocalSwipe } from '../hooks/useVocalSwipe';
 import { useLexicaStore } from '../store/lexicaStore';
 
@@ -32,12 +32,14 @@ interface VocabCardProps {
 export default function VocabCard({ card, index, onSwipe, revealed: controlledRevealed, onReveal }: VocabCardProps) {
     const [internalRevealed, setInternalRevealed] = useState(false);
     const swipeMode = useLexicaStore(state => state.swipeMode);
+    const cardProgress = useLexicaStore(state => state.cardProgress[card.id]);
 
     const revealed = controlledRevealed !== undefined ? controlledRevealed : internalRevealed;
     const handleReveal = onReveal ?? (() => setInternalRevealed(true));
 
     const isBossCard = card.isBossCard || false;
     const isVoiceSwipeRequired = isBossCard || (swipeMode === 'voice' && index === 0);
+    const isReviewCard = Boolean(cardProgress);
 
     const speakWord = () => {
         if ('speechSynthesis' in window) {
@@ -103,6 +105,12 @@ export default function VocabCard({ card, index, onSwipe, revealed: controlledRe
                     <div className="absolute top-3 left-3 px-2 py-1 rounded bg-slate-700 text-slate-400 text-xs font-mono">
                         ELO {card.elo}
                     </div>
+                    {isReviewCard && (
+                        <div className="absolute top-12 left-3 px-2.5 py-1 rounded-full bg-amber-400/12 border border-amber-300/20 text-amber-200 text-[11px] font-semibold flex items-center gap-1.5">
+                            <RotateCcw className="w-3 h-3" />
+                            ÔN TẬP
+                        </div>
+                    )}
                     <div className={`${isBossCard ? 'mt-16' : 'mt-12'} mb-8 text-center`}>
                         <p className="text-lg text-slate-200 leading-relaxed">{card.scenario}</p>
                     </div>

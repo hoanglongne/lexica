@@ -31,6 +31,7 @@ export function useVocalSwipe({
 }: UseVocalSwipeProps): UseVocalSwipeReturn {
     const [state, setState] = useState<VocalSwipeState>('INIT');
     const [hitsRemaining, setHitsRemaining] = useState(3);
+    const [streakCount, setStreakCount] = useState(0);
     const [transcript, setTranscript] = useState('');
     const [lastSpokenWord, setLastSpokenWord] = useState('');
     const [lastWasCorrect, setLastWasCorrect] = useState<boolean | null>(null);
@@ -84,16 +85,27 @@ export function useVocalSwipe({
         };
     }, [isSupported]);
 
+    const normalizeTranscript = useCallback((value: string) => {
+        return value
+            .toLowerCase()
+            .replace(/[^a-z\s'-]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }, []);
+
     // Process speech result
     const processResult = useCallback((spokenWord: string) => {
-        const normalized = spokenWord.toLowerCase().trim();
-        const target = targetWord.toLowerCase().trim();
+        const normalized = normalizeTranscript(spokenWord);
+        const target = normalizeTranscript(targetWord);
+        const spokenTokens = normalized.split(' ').filter(Boolean);
+        const isMatch = normalized === target || spokenTokens.some(token => token === target);
         setLastSpokenWord(spokenWord);
 
-        if (normalized === target || normalized.includes(target)) {
+        if (isMatch) {
             setLastWasCorrect(true);
             // HIT! Increment combo
             consecutiveHits.current += 1;
+            setStreakCount(consecutiveHits.current);
             const remaining = 3 - consecutiveHits.current;
             setHitsRemaining(remaining);
 
@@ -108,7 +120,6 @@ export function useVocalSwipe({
                 setTranscript(`✓✓✓ ${spokenWord} PERFECT!`);
                 setIsCoolingDown(true);
 
-                // Delay a bit so user can see success state, then auto-swipe.
                 if (successTimerRef.current) {
                     clearTimeout(successTimerRef.current);
                 }
@@ -121,6 +132,7 @@ export function useVocalSwipe({
             setLastWasCorrect(false);
             // MISS! Reset combo
             consecutiveHits.current = 0;
+            setStreakCount(0);
             setHitsRemaining(3);
             setState('FAIL');
             setTranscript(`✗ "${spokenWord}" ≠ "${targetWord}"`);
@@ -136,7 +148,7 @@ export function useVocalSwipe({
                 setIsCoolingDown(false);
             }, 1200);
         }
-    }, [targetWord, onSuccess]);
+    }, [normalizeTranscript, targetWord, onSuccess]);
 
     // Setup speech recognition handlers
     useEffect(() => {
@@ -199,7 +211,7 @@ export function useVocalSwipe({
         try {
             recognitionActiveRef.current = true;
             recognitionRef.current.start();
-        } catch (error) {
+        } catch {
             recognitionActiveRef.current = false;
         }
     }, [isSupported, permissionDenied, isCoolingDown]);
@@ -217,13 +229,13 @@ export function useVocalSwipe({
         isSupported &&
         !permissionDenied &&
         !isCoolingDown &&
-        !recognitionActiveRef.current &&
+        state !== 'LISTENING' &&
         state !== 'SUCCESS';
 
     return {
         state,
         hitsRemaining,
-        streakCount: consecutiveHits.current,
+        streakCount,
         startListening,
         stopListening,
         transcript,

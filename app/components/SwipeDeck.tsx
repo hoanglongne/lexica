@@ -9,6 +9,7 @@ import { useLexicaStore } from '../store/lexicaStore';
 
 export default function SwipeDeck() {
     const cards = useLexicaStore(state => state.currentDeck);
+    const cardProgress = useLexicaStore(state => state.cardProgress);
     const swipeCard = useLexicaStore(state => state.swipeCard);
     const consumeEnergy = useLexicaStore(state => state.consumeEnergy);
     const energy = useLexicaStore(state => state.energy);
@@ -31,17 +32,21 @@ export default function SwipeDeck() {
         cardId: string,
         source: 'manual' | 'voice' = 'manual'
     ) => {
+        const isReviewCard = Boolean(cardProgress[cardId]);
+
         if (swipeMode === 'voice' && direction === 'right' && source !== 'voice') {
             return;
         }
 
-        if (energy <= 0) {
+        if (!isReviewCard && energy <= 0) {
             alert('No energy left! Come back tomorrow.');
             return;
         }
 
-        const hasEnergy = consumeEnergy();
-        if (!hasEnergy) return;
+        if (!isReviewCard) {
+            const hasEnergy = consumeEnergy();
+            if (!hasEnergy) return;
+        }
 
         setLastSwipeDirection(direction);
         setTimeout(() => setLastSwipeDirection(null), 1000);
@@ -53,7 +58,7 @@ export default function SwipeDeck() {
         });
 
         swipeCard(cardId, direction);
-    }, [energy, consumeEnergy, swipeCard, swipeMode]);
+    }, [cardProgress, energy, consumeEnergy, swipeCard, swipeMode]);
 
     // Keyboard controls (desktop)
     useEffect(() => {

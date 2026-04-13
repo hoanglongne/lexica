@@ -207,7 +207,7 @@ export default function Home() {
       <EnergyBar currentEnergy={energy} maxEnergy={maxEnergy} />
 
       {/* Mobile Quick Level Switch */}
-      <div className="lg:hidden fixed top-18 right-4 z-40">
+      <div className="lg:hidden fixed top-[102px] right-4 z-40">
         <button
           onClick={() => setSelectedLevel(null)}
           className="px-3 py-2 rounded-lg bg-slate-800/90 border border-slate-700 hover:border-cyan-500 text-slate-200 text-xs font-medium transition-colors flex items-center gap-1.5"
@@ -283,7 +283,7 @@ export default function Home() {
           </div>
 
           {/* Desktop Full Stats Card */}
-          <div className="hidden lg:block bg-slate-800/50 border border-slate-700 rounded-xl p-5 lg:p-6 space-y-5 lg:space-y-6">
+          <div className="hidden lg:block bg-slate-800/50 border border-slate-700 rounded-xl p-5 lg:p-6 space-y-4 lg:space-y-5">
 
             {/* Level Badge */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-700">
@@ -307,9 +307,6 @@ export default function Home() {
                   {isVoiceMode ? 'Voice Mode' : 'Touch Mode'}
                 </button>
               </div>
-              <p className="text-xs text-slate-500">
-                Voice mode bật top card phải đọc đúng 3 lần liên tiếp mới được swipe phải.
-              </p>
             </div>
 
             {/* Performance Stats - Hidden on mobile, shown in compact grid above */}
