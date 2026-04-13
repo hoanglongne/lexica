@@ -2,16 +2,19 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { TrendingUp, MousePointerClick, Target, BookOpen, Award, Clock, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check, Mic, Hand } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import EnergyBar from './components/EnergyBar';
+import ErrorBoundary from './components/ErrorBoundary';
 import SwipeDeck from './components/SwipeDeck';
 import LevelSelector from './components/LevelSelector';
-import LevelTestWelcome from './components/LevelTestWelcome';
-import LevelTest from './components/LevelTest';
-import LevelTestResult from './components/LevelTestResult';
-import StoryUnlockModal from './components/StoryUnlockModal';
-import StoryMode from './components/StoryMode';
+
+const LevelTestWelcome = dynamic(() => import('./components/LevelTestWelcome'));
+const LevelTest = dynamic(() => import('./components/LevelTest'));
+const LevelTestResult = dynamic(() => import('./components/LevelTestResult'));
+const StoryUnlockModal = dynamic(() => import('./components/StoryUnlockModal'));
+const StoryMode = dynamic(() => import('./components/StoryMode'));
 import { useLexicaStore, initializeLexicaStore } from './store/lexicaStore';
 import { getDifficultyAnalysis, getProgressStats } from './lib/eloAlgorithm';
 
@@ -224,7 +227,9 @@ export default function Home() {
         <div className="w-full lg:flex-1 lg:max-w-lg flex flex-col items-center justify-between h-full lg:min-h-150">
           {/* Swipe Deck */}
           <div className="w-full max-w-md flex-1 flex items-center justify-center">
-            <SwipeDeck />
+            <ErrorBoundary>
+              <SwipeDeck />
+            </ErrorBoundary>
           </div>
 
           {/* Difficulty Status Notification */}
@@ -263,6 +268,18 @@ export default function Home() {
         <div className="w-full lg:w-72 xl:w-80 shrink-0">
           {/* Mobile Action Bar */}
           <div className="lg:hidden flex items-center justify-center gap-2 mb-4">
+            {/* Voice/Touch Toggle */}
+            <button
+              onClick={() => setSwipeMode(isVoiceMode ? 'touch' : 'voice')}
+              className={`shrink-0 p-2 px-3 rounded-lg border text-xs font-semibold transition-colors active:scale-95 flex items-center gap-1.5 ${isVoiceMode
+                  ? 'bg-cyan-500/12 border-cyan-400/35 text-cyan-200'
+                  : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-cyan-500'
+                }`}
+            >
+              {isVoiceMode ? <Mic className="w-3.5 h-3.5" /> : <Hand className="w-3.5 h-3.5" />}
+              {isVoiceMode ? 'Voice' : 'Touch'}
+            </button>
+
             {/* Stats Button */}
             <button
               className="flex-1 p-2 px-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95 flex items-center justify-center gap-2"
@@ -462,7 +479,7 @@ export default function Home() {
                     </button>
                   </div>
                   <p className="text-xs text-slate-500">
-                    Voice mode yeu cau top card duoc doc dung 3 lan lien tiep.
+                    Voice mode yêu cầu đọc đúng từ trên cùng 3 lần liên tiếp.
                   </p>
                 </div>
 

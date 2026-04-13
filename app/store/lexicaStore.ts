@@ -151,9 +151,11 @@ export const useLexicaStore = create<LexicaStore>()(
                     [cardId]: updatedProgress,
                 };
 
-                // Add to learned words set (any word that has been swiped)
+                // Only count as "learned" when user swipes Right (Nhớ)
                 const updatedLearnedWords = new Set(learnedWords);
-                updatedLearnedWords.add(cardId);
+                if (direction === 'right') {
+                    updatedLearnedWords.add(cardId);
+                }
 
                 // Remove swiped card from deck
                 const updatedDeck = currentDeck.filter(card => card.id !== cardId);
@@ -345,6 +347,7 @@ export const useLexicaStore = create<LexicaStore>()(
                 learnedWords: Array.from(state.learnedWords), // Convert Set to Array for JSON
                 energy: state.energy,
                 lastEnergyReset: state.lastEnergyReset,
+                swipeMode: state.swipeMode, // Persist voice/touch preference
                 selectedLevel: state.selectedLevel, // Persist user's level choice
                 hasSeenWelcome: state.hasSeenWelcome, // Persist welcome screen state
                 testScore: state.testScore, // Persist test score

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PartyPopper, Check, X } from 'lucide-react';
 import VocabCard from './VocabCard';
 import { useLexicaStore } from '../store/lexicaStore';
+import { analytics } from '../lib/analytics';
 
 export default function SwipeDeck() {
     const cards = useLexicaStore(state => state.currentDeck);
@@ -50,6 +51,8 @@ export default function SwipeDeck() {
 
         setLastSwipeDirection(direction);
         setTimeout(() => setLastSwipeDirection(null), 1000);
+
+        analytics.swipe(direction, cardId, source);
 
         // flushSync forces a synchronous re-render with the correct exit direction
         // BEFORE swipeCard removes the card, so AnimatePresence snapshots the right values

@@ -11,54 +11,6 @@ export interface Story {
     darkComedyLevel: 'medium' | 'high' | 'extreme';
 }
 
-const STORY_TEMPLATES: Record<string, string> = {
-    story_001: `You arrive at the bank at 3 AM with an {0} amount of confidence and zero common sense.
-
-Your {1} process is simple: if the movie made it look easy, it must be real life. Unfortunately, you immediately face a moral {2}: steal money or go home and sleep.
-
-You decide to test whether this plan is actually {3}. The answer becomes {4} when the front door is locked and the guard starts recording you.
-
-Trying to look {5}, you explain that you're "auditing their night security." Your excuse is so {6} that even you don't understand it.
-
-The guard, somehow {7} after years of nonsense, asks you to leave for the third time.
-
-You keep talking in a {8} monologue about economic freedom until he opens the door just to get rid of you.
-
-As you walk out, you notice one {9} detail: your "master plan" was written on a pizza box in glitter pen.`,
-    story_002: `You enter the office lobby with a {0} resume while zombies are already in the parking lot.
-
-Panic is {1}, but you stay calm because confidence is temporary, like all things {2}.
-
-The interviewer compliments your {3} answer about leadership, though his left eye falls into his coffee mid-sentence.
-
-"Your survival plan sounds {4}," he says. "Now let me {5} your references."
-
-You remain {6}: "All my references were eaten ten minutes ago."
-
-He pauses to {7} that, then asks why you want this role.
-
-"Because my previous life was too {8}," you reply, as a zombie HR intern crawls under the table.
-
-He nods. "Adaptability is {9} to this company culture. You're hired if you survive the exit interview."
-
-The exit interview is just running to the helicopter while signing tax forms.`,
-    story_003: `You travel back to 1920 and immediately face a historical {0}: fix the timeline or avoid being arrested for your futuristic shoes.
-
-Your panic will only {1} the mission, so you try to {2} chaos by pretending to be a quiet accountant.
-
-Then someone asks why your watch has a touchscreen. You invent a long explanation full of philosophical {3} and fake confidence.
-
-Unfortunately, your lies are too {4}. Every answer creates three new questions and two suspicious uncles.
-
-To stay hidden, you remove all {5} gadgets and keep only one {6} objective: stop the inventor before lunch.
-
-At the {7} of your speech, you deliver a perfectly {8} warning about the future.
-
-The inventor smiles and calls your logic "beautifully {9}." Then he invents the dangerous sandwich anyway.
-
-By sunset, the timeline has forked into 47 cursed realities where everyone debates condiments for eternity.`,
-};
-
 const VOCAB_BY_ID = new Map(VOCAB_DATABASE.map(vocab => [vocab.id, vocab]));
 
 /**
@@ -298,28 +250,4 @@ export function parseStoryContentWithIds(
     }
 
     return segments;
-}
-
-export function renderStoryContent(storyId: string, assignedVocabularyIds?: string[]): string {
-    const story = STORIES.find(item => item.id === storyId);
-    if (!story) return '';
-
-    const template = STORY_TEMPLATES[storyId];
-    if (!template) return story.content;
-
-    const vocabularyIds = assignedVocabularyIds && assignedVocabularyIds.length > 0
-        ? assignedVocabularyIds
-        : story.vocabularyIds;
-
-    return template.replace(/\{(\d+)\}/g, (_match, rawIndex) => {
-        const index = Number(rawIndex);
-        const vocabId = vocabularyIds[index];
-        const vocab = vocabId ? VOCAB_BY_ID.get(vocabId) : undefined;
-
-        if (!vocab) {
-            return '{unknown}';
-        }
-
-        return `{${vocab.word.toLowerCase()}}`;
-    });
 }

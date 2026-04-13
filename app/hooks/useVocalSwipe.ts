@@ -185,9 +185,8 @@ export function useVocalSwipe({
 
         recognition.onend = () => {
             recognitionActiveRef.current = false;
-            if (state === 'LISTENING') {
-                setState('INIT');
-            }
+            // Functional update to avoid stale closure: only reset if still LISTENING
+            setState(prev => prev === 'LISTENING' ? 'INIT' : prev);
         };
 
         recognition.onstart = () => {
@@ -195,7 +194,7 @@ export function useVocalSwipe({
             setState('LISTENING');
             setTranscript('Listening...');
         };
-    }, [enabled, processResult, state]);
+    }, [enabled, processResult]);
 
     const startListening = useCallback(() => {
         if (

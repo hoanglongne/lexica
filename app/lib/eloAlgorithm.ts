@@ -127,11 +127,6 @@ export function selectNextCard(
         return filteredCards[Math.floor(Math.random() * filteredCards.length)];
     }
 
-    if (unseenCards.length === 0) {
-        // If all cards seen, reset seen list and use all cards
-        return availableCards[Math.floor(Math.random() * availableCards.length)];
-    }
-
     // Calculate struggle rate
     const struggleRate = calculateStruggleRate(userStats.recentSwipes);
 
@@ -193,6 +188,9 @@ export function generateInitialDeck(
         ? VOCAB_DATABASE.filter(card => card.level === selectedLevel)
         : VOCAB_DATABASE;
 
+    // Local copy of seenCardIds to avoid mutating the Zustand store directly
+    const seenCardIds = [...userStats.seenCardIds];
+
     // Step 0: Force-inject cards (story pack catch-up), bypassing ELO and level filter.
     for (const forcedCardId of forcedCardIds) {
         if (deck.length >= DECK_SIZE) break;
@@ -207,9 +205,9 @@ export function generateInitialDeck(
             state: progress?.state || 'seed',
         });
 
-        userStats.seenCardIds.push(cardData.id);
-        if (userStats.seenCardIds.length > 20) {
-            userStats.seenCardIds.shift();
+        seenCardIds.push(cardData.id);
+        if (seenCardIds.length > 20) {
+            seenCardIds.shift();
         }
     }
 
@@ -230,16 +228,29 @@ export function generateInitialDeck(
             });
 
             // Add to seen list
-            userStats.seenCardIds.push(cardData.id);
-            if (userStats.seenCardIds.length > 20) {
-                userStats.seenCardIds.shift();
+            seenCardIds.push(cardData.id);
+            if (seenCardIds.length > 20) {
+                seenCardIds.shift();
             }
         }
     }
 
     // Step 3: Fill remaining slots with new cards (ELO-based)
+    // Only consider cards with NO progress entry (truly never seen).
+    // Cards that have been learned but are not yet due should stay in the SRS
+    // review queue and must NOT re-appear as "new" cards before their nextReviewAt.
+    const now = Date.now();
+    const newCardsOnly = filteredDatabase.filter(card => {
+        const progress = cardProgress[card.id];
+        // No progress → brand new card, eligible.
+        // Has progress but due right now → already handled in Step 1 above.
+        // Has progress with future nextReviewAt → exclude until review date.
+        return !progress || progress.nextReviewAt <= now;
+    });
+
+    const localStats = { ...userStats, seenCardIds };
     while (deck.length < DECK_SIZE) {
-        const nextCard = selectNextCard(userStats, filteredDatabase, selectedLevel);
+        const nextCard = selectNextCard(localStats, newCardsOnly, selectedLevel);
         if (!nextCard) break; // No more cards available
 
         // Check if card has existing progress
@@ -251,9 +262,10 @@ export function generateInitialDeck(
         });
 
         // Add to seen list
-        userStats.seenCardIds.push(nextCard.id);
-        if (userStats.seenCardIds.length > 20) {
-            userStats.seenCardIds.shift();
+        seenCardIds.push(nextCard.id);
+        localStats.seenCardIds = seenCardIds;
+        if (seenCardIds.length > 20) {
+            seenCardIds.shift();
         }
     }
 

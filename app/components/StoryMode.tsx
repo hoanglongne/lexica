@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink, BookOpen, Trophy, Volume2 } from 'lucide-react';
 import { STORIES, parseStoryContentWithIds } from '../data/stories';
 import { VOCAB_DATABASE } from '../data/vocabCards';
+import { analytics } from '../lib/analytics';
 
 const VOCAB_ID_BY_WORD = new Map(
     VOCAB_DATABASE.map(vocab => [vocab.word.trim().toLowerCase(), vocab.id])
@@ -166,7 +167,7 @@ export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps
                             href="https://oratio.example.com"
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={onFinish}
+                            onClick={() => { analytics.oratioCTAClick(storyId); onFinish(); }}
                             className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-center py-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 group"
                         >
                             <span className="text-lg">Thử ORATIO miễn phí</span>

@@ -118,28 +118,39 @@ export default function VocabCard({ card, index, onSwipe, revealed: controlledRe
                         {isVoiceSwipeRequired ? (
                             /* Voice mode: mic + feedback replaces reveal button */
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between text-xs mb-1">
+                                <div className="flex items-center justify-between text-xs">
                                     <span className="text-slate-500">Từ cần nói</span>
                                     <span className="text-cyan-300 font-bold tracking-wide">{card.word.toUpperCase()}</span>
                                 </div>
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="text-slate-500">Bạn vừa nói</span>
-                                    <span className="text-slate-300 truncate max-w-32 text-right">{lastSpokenWord || '—'}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-xs mb-2">
-                                    <span className="text-slate-500">Streak</span>
-                                    <span className={`font-semibold ${lastWasCorrect === false ? 'text-red-400' : 'text-green-400'}`}>
-                                        {streakCount}/3{lastWasCorrect === false ? ' • sai, reset' : ''}
-                                    </span>
-                                </div>
+                                {vocalState === 'FAIL' ? (
+                                    <div className="px-3 py-2.5 rounded-lg bg-red-500/15 border border-red-500/30 text-center">
+                                        <p className="text-red-400 text-xs font-semibold mb-0.5">Sai! Streak reset về 0</p>
+                                        {lastSpokenWord && (
+                                            <p className="text-slate-300 text-xs">
+                                                Bạn nói <span className="text-red-300 font-medium">&ldquo;{lastSpokenWord}&rdquo;</span>
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-500">Bạn vừa nói</span>
+                                            <span className="text-slate-300 truncate max-w-32 text-right">{lastSpokenWord || '—'}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-slate-500">Streak</span>
+                                            <span className="text-green-400 font-semibold">{streakCount}/3</span>
+                                        </div>
+                                    </>
+                                )}
                                 <button
                                     onClick={startListening}
                                     disabled={!canStartListening}
                                     className={`w-full px-4 py-3 rounded-lg border font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed ${vocalState === 'LISTENING' ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300' :
-                                            vocalState === 'SUCCESS' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
-                                                vocalState === 'FAIL' ? 'bg-red-500/20 border-red-500/40 text-red-300' :
-                                                    vocalState === 'HIT_1' || vocalState === 'HIT_2' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
-                                                        'bg-purple-500/20 border-purple-500/40 text-purple-300 hover:bg-purple-500/30'
+                                        vocalState === 'SUCCESS' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
+                                            vocalState === 'FAIL' ? 'bg-red-500/20 border-red-500/40 text-red-300' :
+                                                vocalState === 'HIT_1' || vocalState === 'HIT_2' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
+                                                    'bg-purple-500/20 border-purple-500/40 text-purple-300 hover:bg-purple-500/30'
                                         }`}
                                 >
                                     <Mic className={`w-4 h-4 ${vocalState === 'LISTENING' ? 'animate-pulse' : ''}`} />
