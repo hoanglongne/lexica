@@ -15,6 +15,7 @@ const LevelTest = dynamic(() => import('./components/LevelTest'));
 const LevelTestResult = dynamic(() => import('./components/LevelTestResult'));
 const StoryUnlockModal = dynamic(() => import('./components/StoryUnlockModal'));
 const StoryMode = dynamic(() => import('./components/StoryMode'));
+const OnboardingModal = dynamic(() => import('./components/OnboardingModal'));
 import { useLexicaStore, initializeLexicaStore } from './store/lexicaStore';
 import { getDifficultyAnalysis, getProgressStats } from './lib/eloAlgorithm';
 
@@ -30,6 +31,8 @@ export default function Home() {
   const testScore = useLexicaStore(state => state.testScore);
   const recommendedLevel = useLexicaStore(state => state.recommendedLevel);
   const swipeMode = useLexicaStore(state => state.swipeMode);
+  const hasSeenOnboarding = useLexicaStore(state => state.hasSeenOnboarding);
+  const completeOnboarding = useLexicaStore(state => state.completeOnboarding);
 
   const setSelectedLevel = useLexicaStore(state => state.setSelectedLevel);
   const startTest = useLexicaStore(state => state.startTest);
@@ -50,6 +53,7 @@ export default function Home() {
 
   // Mobile stats modal state
   const [showMobileStats, setShowMobileStats] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Difficulty status notification state
   const [showDifficultyStatus, setShowDifficultyStatus] = useState(false);
@@ -199,12 +203,25 @@ export default function Home() {
 
   return (
     <div className="relative h-screen flex flex-col bg-slate-900 overflow-hidden">
+      {/* Onboarding — shown on first visit or when user clicks ? */}
+      {(!hasSeenOnboarding || showOnboarding) && (
+        <OnboardingModal onComplete={() => { completeOnboarding(); setShowOnboarding(false); }} />
+      )}
       {/* Logo - Top Left */}
       <div className="hidden lg:block fixed top-4 left-4 md:top-6 md:left-6 z-50">
         <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
           LEXICA
         </h1>
       </div>
+
+      {/* Help Button - fixed bottom right */}
+      <button
+        onClick={() => setShowOnboarding(true)}
+        className="fixed bottom-5 right-5 z-50 w-8 h-8 rounded-full bg-slate-700 border border-slate-600 hover:border-cyan-500 hover:bg-slate-600 transition-colors flex items-center justify-center text-slate-400 hover:text-cyan-400 text-sm font-bold"
+        aria-label="Hướng dẫn"
+      >
+        ?
+      </button>
 
       {/* Energy Bar Header */}
       <EnergyBar currentEnergy={energy} maxEnergy={maxEnergy} />

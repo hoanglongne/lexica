@@ -56,6 +56,8 @@ export default function VocabCard({ card, index, onSwipe, revealed: controlledRe
         hitsRemaining,
         streakCount,
         startListening,
+        stopListening,
+        setHolding,
         lastSpokenWord,
         lastWasCorrect,
         canStartListening,
@@ -116,50 +118,59 @@ export default function VocabCard({ card, index, onSwipe, revealed: controlledRe
                     </div>
                     <div className="absolute bottom-6 left-6 right-6">
                         {isVoiceSwipeRequired ? (
-                            /* Voice mode: mic + feedback replaces reveal button */
+                            /* Voice mode: word info always visible + mic controls */
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="text-slate-500">Từ cần nói</span>
-                                    <span className="text-cyan-300 font-bold tracking-wide">{card.word.toUpperCase()}</span>
-                                </div>
-                                {vocalState === 'FAIL' ? (
-                                    <div className="px-3 py-2.5 rounded-lg bg-red-500/15 border border-red-500/30 text-center">
-                                        <p className="text-red-400 text-xs font-semibold mb-0.5">Sai! Streak reset về 0</p>
-                                        {lastSpokenWord && (
-                                            <p className="text-slate-300 text-xs">
-                                                Bạn nói <span className="text-red-300 font-medium">&ldquo;{lastSpokenWord}&rdquo;</span>
-                                            </p>
-                                        )}
+                                {/* Word + IPA + meaning + streak/spoken — all in one card */}
+                                <div className={`px-3 py-2 rounded-lg border ${vocalState === 'FAIL' ? 'bg-red-500/10 border-red-500/30' : 'bg-slate-700/60 border-slate-600'}`}>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-slate-100 font-semibold text-sm">{card.word}</span>
+                                                {card.ipa && <span className="text-slate-500 text-xs font-mono">/{card.ipa}/</span>}
+                                            </div>
+                                            <p className="text-slate-400 text-xs truncate">{card.translationHint}</p>
+                                        </div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); speakWord(); }}
+                                            className="shrink-0 text-slate-400 hover:text-cyan-400 transition-colors"
+                                        >
+                                            <Volume2 className="w-4 h-4" />
+                                        </button>
                                     </div>
-                                ) : (
-                                    <>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-500">Bạn vừa nói</span>
-                                            <span className="text-slate-300 truncate max-w-32 text-right">{lastSpokenWord || '—'}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-slate-500">Streak</span>
-                                            <span className="text-green-400 font-semibold">{streakCount}/3</span>
-                                        </div>
-                                    </>
-                                )}
+                                    <div className="mt-1.5 pt-1.5 border-t border-slate-600/60 flex items-center justify-between text-xs">
+                                        {vocalState === 'FAIL' ? (
+                                            <span className="text-red-400 font-semibold">Sai! Streak reset</span>
+                                        ) : (
+                                            <span className="text-slate-500">
+                                                {lastSpokenWord ? <>Bạn nói: <span className="text-slate-300">&ldquo;{lastSpokenWord}&rdquo;</span></> : 'Chưa nói'}
+                                            </span>
+                                        )}
+                                        <span className={`font-semibold ${vocalState === 'FAIL' ? 'text-red-400' : streakCount > 0 ? 'text-green-400' : 'text-slate-500'}`}>
+                                            {streakCount}/3 ✓
+                                        </span>
+                                    </div>
+                                </div>
                                 <button
-                                    onClick={startListening}
+                                    onPointerDown={(e) => { e.preventDefault(); setHolding(true); startListening(); }}
+                                    onPointerUp={() => { setHolding(false); stopListening(); }}
+                                    onPointerLeave={() => { setHolding(false); stopListening(); }}
                                     disabled={!canStartListening}
-                                    className={`w-full px-4 py-3 rounded-lg border font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed ${vocalState === 'LISTENING' ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300' :
+                                    className={`w-full px-4 py-3 rounded-lg border font-semibold text-sm transition-colors flex items-center justify-center gap-2 select-none touch-none disabled:cursor-not-allowed ${vocalState === 'LISTENING' ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 scale-[0.98]' :
                                         vocalState === 'SUCCESS' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
                                             vocalState === 'FAIL' ? 'bg-red-500/20 border-red-500/40 text-red-300' :
                                                 vocalState === 'HIT_1' || vocalState === 'HIT_2' ? 'bg-green-500/20 border-green-500/40 text-green-300' :
-                                                    'bg-purple-500/20 border-purple-500/40 text-purple-300 hover:bg-purple-500/30'
+                                                    streakCount > 0 ? 'bg-green-500/10 border-green-500/30 text-green-300 hover:bg-green-500/20' :
+                                                        'bg-purple-500/20 border-purple-500/40 text-purple-300 hover:bg-purple-500/30'
                                         }`}
                                 >
                                     <Mic className={`w-4 h-4 ${vocalState === 'LISTENING' ? 'animate-pulse' : ''}`} />
-                                    {vocalState === 'LISTENING' ? 'Đang nghe...' :
+                                    {vocalState === 'LISTENING' ? 'Đang nghe... (thả để dừng)' :
                                         vocalState === 'SUCCESS' ? '✓ Hoàn hảo!' :
                                             vocalState === 'FAIL' ? 'Đang reset...' :
-                                                vocalState === 'HIT_1' ? '1/3 ✓ — Tiếp tục!' :
-                                                    vocalState === 'HIT_2' ? '2/3 ✓ — Một lần nữa!' :
-                                                        'Tap để nói'}
+                                                vocalState === 'HIT_1' ? '1/3 ✓ — Giữ để nói tiếp!' :
+                                                    vocalState === 'HIT_2' ? '2/3 ✓ — Giữ để nói tiếp!' :
+                                                        streakCount > 0 ? `${streakCount}/3 ✓ — Giữ để nói tiếp!` :
+                                                            'Giữ để nói'}
                                     <div className="ml-auto flex gap-1">
                                         {[0, 1, 2].map((i) => (
                                             <div key={i} className={`w-2 h-2 rounded-full ${i < 3 - hitsRemaining ? 'bg-green-400' : 'bg-slate-600'}`} />

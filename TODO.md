@@ -114,9 +114,9 @@
 - [ ] **Fix: Replace ORATIO placeholder URL** (real url: `https://oratio-new.vercel.app/`)
 
 ### Priority P1 — UX quan trọng
-- [ ] **Onboarding guide** — modal/walkthrough lần đầu dùng app
+- [x] **Onboarding guide** — modal/walkthrough lần đầu dùng app
   - Approach: Thêm `hasSeenOnboarding` vào store; modal hiện sau welcome screen; 3-4 steps giải thích swipe / voice / energy / stories
-- [ ] **Cải thiện UX voice mode** — R&D cách bấm mic
+- [x] **Cải thiện UX voice mode** — R&D cách bấm mic
   - Option A: Hold-to-talk (giữ nút → record, thả → stop) — mobile-friendly nhất
   - Option B: Auto-listen sau mỗi hit (timeout 2s rồi tự listen) — ít bấm nhất
   - Option C: Debounced auto-listen ngay khi vào voice mode — nhưng cần handle noise tốt

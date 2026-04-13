@@ -16,6 +16,7 @@ interface UseVocalSwipeReturn {
     streakCount: number;
     startListening: () => void;
     stopListening: () => void;
+    setHolding: (val: boolean) => void;
     transcript: string;
     lastSpokenWord: string;
     lastWasCorrect: boolean | null;
@@ -41,6 +42,7 @@ export function useVocalSwipe({
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const consecutiveHits = useRef(0);
     const recognitionActiveRef = useRef(false);
+    const isHoldingRef = useRef(false);
     const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const failResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -185,8 +187,23 @@ export function useVocalSwipe({
 
         recognition.onend = () => {
             recognitionActiveRef.current = false;
-            // Functional update to avoid stale closure: only reset if still LISTENING
-            setState(prev => prev === 'LISTENING' ? 'INIT' : prev);
+            setState(prev => {
+                // Auto-restart if user is still holding and we're mid-combo (HIT_1 or HIT_2).
+                // continuous=false means browser stops after each result — we bridge the gap.
+                if (isHoldingRef.current && (prev === 'HIT_1' || prev === 'HIT_2')) {
+                    setTimeout(() => {
+                        if (isHoldingRef.current && recognitionRef.current && !recognitionActiveRef.current) {
+                            try {
+                                recognitionActiveRef.current = true;
+                                recognitionRef.current.start();
+                            } catch {
+                                recognitionActiveRef.current = false;
+                            }
+                        }
+                    }, 50);
+                }
+                return prev === 'LISTENING' ? 'INIT' : prev;
+            });
         };
 
         recognition.onstart = () => {
@@ -216,11 +233,16 @@ export function useVocalSwipe({
     }, [isSupported, permissionDenied, isCoolingDown]);
 
     const stopListening = useCallback(() => {
-        if (recognitionRef.current) {
+        isHoldingRef.current = false;
+        if (recognitionRef.current && recognitionActiveRef.current) {
             recognitionActiveRef.current = false;
             recognitionRef.current.stop();
-            setState('INIT');
+            setState(prev => prev === 'LISTENING' ? 'INIT' : prev);
         }
+    }, []);
+
+    const setHolding = useCallback((val: boolean) => {
+        isHoldingRef.current = val;
     }, []);
 
     const canStartListening =
@@ -237,6 +259,7 @@ export function useVocalSwipe({
         streakCount,
         startListening,
         stopListening,
+        setHolding,
         transcript,
         lastSpokenWord,
         lastWasCorrect,

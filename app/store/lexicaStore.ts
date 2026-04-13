@@ -49,6 +49,10 @@ interface LexicaStore {
     showStoryUnlock: boolean; // Show "Story Unlocked!" modal
     showStoryMode: boolean; // Show story reading screen
 
+    // Onboarding
+    hasSeenOnboarding: boolean;
+    completeOnboarding: () => void;
+
     // Swipe Mode
     swipeMode: 'touch' | 'voice';
     setSwipeMode: (mode: 'touch' | 'voice') => void;
@@ -122,8 +126,11 @@ export const useLexicaStore = create<LexicaStore>()(
             swipeMode: 'touch',
             setSwipeMode: (mode) => set({ swipeMode: mode }),
 
+            completeOnboarding: () => set({ hasSeenOnboarding: true }),
+
             // Test flow state
             hasSeenWelcome: false,
+            hasSeenOnboarding: false,
             isInTest: false,
             testScore: null,
             recommendedLevel: null,
@@ -350,6 +357,7 @@ export const useLexicaStore = create<LexicaStore>()(
                 swipeMode: state.swipeMode, // Persist voice/touch preference
                 selectedLevel: state.selectedLevel, // Persist user's level choice
                 hasSeenWelcome: state.hasSeenWelcome, // Persist welcome screen state
+                hasSeenOnboarding: state.hasSeenOnboarding,
                 testScore: state.testScore, // Persist test score
                 recommendedLevel: state.recommendedLevel, // Persist recommendation
                 // Story Mode persistence

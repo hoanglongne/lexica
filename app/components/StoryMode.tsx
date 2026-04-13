@@ -164,7 +164,7 @@ export default function StoryMode({ storyId, onClose, onFinish }: StoryModeProps
                         </div>
 
                         <a
-                            href="https://oratio.example.com"
+                            href="https://oratio-new.vercel.app/"
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => { analytics.oratioCTAClick(storyId); onFinish(); }}
