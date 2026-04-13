@@ -12,6 +12,7 @@ interface TestQuestion {
     options: string[];
     correctAnswer: number; // index in options array
     level: DifficultyLevel;
+    elo: number;
 }
 
 const TEST_QUESTIONS: TestQuestion[] = [
@@ -20,75 +21,105 @@ const TEST_QUESTIONS: TestQuestion[] = [
         word: 'ABUNDANT',
         ipa: 'əˈbʌndənt',
         scenario: 'Ảnh couple mới của ex tôi ABUNDANT trên Instagram vãi.',
-        options: [
-            'Hiếm hoi, khan hiếm',
-            'Dư thừa, nhiều hơn cần thiết',
-            'Đẹp đẽ, ấn tượng',
-            'Gây shock, bất ngờ'
-        ],
+        options: ['Hiếm hoi, khan hiếm', 'Dư thừa, nhiều hơn cần thiết', 'Đẹp đẽ, ấn tượng', 'Gây shock, bất ngờ'],
         correctAnswer: 1,
-        level: 'beginner'
+        level: 'beginner',
+        elo: 850,
     },
     {
         id: 'q2',
-        word: 'FEASIBLE',
-        ipa: 'ˈfiːzəbl',
-        scenario: 'Ngủ đủ 8 tiếng mà làm 2 công việc có FEASIBLE không? Không luôn.',
-        options: [
-            'Dễ dàng, đơn giản',
-            'Khả thi, có thể thực hiện được',
-            'Vui vẻ, thú vị',
-            'Căng thẳng, mệt mỏi'
-        ],
+        word: 'OBVIOUS',
+        ipa: 'ˈɒbviəs',
+        scenario: 'Lý do OBVIOUS nhất tôi thức khuya là YouTube bảo "chỉ 1 video nữa thôi".',
+        options: ['Kỳ lạ, bí ẩn', 'Rõ ràng, hiển nhiên', 'Nguy hiểm, đáng lo', 'Hài hước, buồn cười'],
         correctAnswer: 1,
-        level: 'beginner'
+        level: 'beginner',
+        elo: 870,
     },
     {
         id: 'q3',
-        word: 'UBIQUITOUS',
-        ipa: 'juːˈbɪkwɪtəs',
-        scenario: 'Lo âu thì UBIQUITOUS trong đời tôi như Wi-Fi free vậy.',
-        options: [
-            'Nguy hiểm, đáng sợ',
-            'Phổ biến khắp nơi, có mặt mọi lúc',
-            'Tạm thời, nhất thời',
-            'Khó chịu, bực bội'
-        ],
+        word: 'FEASIBLE',
+        ipa: 'ˈfiːzəbl',
+        scenario: 'Ngủ đủ 8 tiếng mà làm 2 công việc có FEASIBLE không? Không luôn.',
+        options: ['Dễ dàng, đơn giản', 'Khả thi, có thể thực hiện được', 'Vui vẻ, thú vị', 'Căng thẳng, mệt mỏi'],
         correctAnswer: 1,
-        level: 'intermediate'
+        level: 'beginner',
+        elo: 975,
     },
     {
         id: 'q4',
-        word: 'CONTEMPLATE',
-        ipa: 'ˈkɒntəmpleɪt',
-        scenario: 'Tôi CONTEMPLATE việc nhắn "còn thức không?" lúc 2h sáng quá thường xuyên.',
-        options: [
-            'Hối hận, tiếc nuối',
-            'Từ chối, phản đối',
-            'Suy ngẫm, trầm tư',
-            'Thực hiện, hành động'
-        ],
-        correctAnswer: 2,
-        level: 'intermediate'
+        word: 'UBIQUITOUS',
+        ipa: 'juːˈbɪkwɪtəs',
+        scenario: 'Lo âu thì UBIQUITOUS trong đời tôi như Wi-Fi free vậy.',
+        options: ['Nguy hiểm, đáng sợ', 'Phổ biến khắp nơi, có mặt mọi lúc', 'Tạm thời, nhất thời', 'Khó chịu, bực bội'],
+        correctAnswer: 1,
+        level: 'intermediate',
+        elo: 1050,
     },
     {
         id: 'q5',
+        word: 'CONTEMPLATE',
+        ipa: 'ˈkɒntəmpleɪt',
+        scenario: 'Tôi CONTEMPLATE việc nhắn "còn thức không?" lúc 2h sáng quá thường xuyên.',
+        options: ['Hối hận, tiếc nuối', 'Từ chối, phản đối', 'Suy ngẫm, trầm tư', 'Thực hiện, hành động'],
+        correctAnswer: 2,
+        level: 'intermediate',
+        elo: 1080,
+    },
+    {
+        id: 'q6',
+        word: 'CYNICAL',
+        ipa: 'ˈsɪnɪkl',
+        scenario: 'Tôi trở nên CYNICAL sau khi xem đủ "sự thật về" video trên YouTube.',
+        options: ['Lạc quan, tin tưởng', 'Hào hứng, nhiệt tình', 'Hoài nghi, hay chỉ trích', 'Mơ mộng, viển vông'],
+        correctAnswer: 2,
+        level: 'intermediate',
+        elo: 1150,
+    },
+    {
+        id: 'q7',
         word: 'RECALCITRANT',
         ipa: 'rɪˈkælsɪtrənt',
         scenario: 'Laptop RECALCITRANT của tôi từ chối update như mục tiêu cuộc đời vậy.',
-        options: [
-            'Cũ kỹ, lỗi thời',
-            'Chậm chạp, lag',
-            'Ngoan cố, bướng bỉnh',
-            'Hỏng hóc, lỗi'
-        ],
+        options: ['Cũ kỹ, lỗi thời', 'Chậm chạp, lag', 'Ngoan cố, bướng bỉnh', 'Hỏng hóc, lỗi'],
         correctAnswer: 2,
-        level: 'advanced'
-    }
+        level: 'advanced',
+        elo: 1250,
+    },
+    {
+        id: 'q8',
+        word: 'CLANDESTINE',
+        ipa: 'klænˈdestɪn',
+        scenario: 'Cuộc họp CLANDESTINE của tôi với bạn thân: kêu ốm rồi ra ngoài ăn phở.',
+        options: ['Ồn ào, náo nhiệt', 'Tốn tiền, xa xỉ', 'Bí mật, lén lút', 'Kéo dài, mệt mỏi'],
+        correctAnswer: 2,
+        level: 'advanced',
+        elo: 1350,
+    },
+    {
+        id: 'q9',
+        word: 'ESOTERIC',
+        ipa: 'ˌesəˈterɪk',
+        scenario: 'Sở thích ESOTERIC của tôi: sưu tầm font chữ — không ai hiểu tại sao.',
+        options: ['Thông dụng, phổ biến', 'Bí truyền, chỉ người trong nghề hiểu', 'Đắt tiền, hiếm có', 'Cổ xưa, lỗi thời'],
+        correctAnswer: 1,
+        level: 'expert',
+        elo: 1400,
+    },
+    {
+        id: 'q10',
+        word: 'BYZANTINE',
+        ipa: 'ˈbɪzəntiːn',
+        scenario: 'Quy trình BYZANTINE xin reimbursement của công ty dài hơn cả dự án tôi làm.',
+        options: ['Nhanh chóng, hiệu quả', 'Cổ kính, hoài cổ', 'Phức tạp rắc rối đến mức khó tin', 'Tốn kém, lãng phí'],
+        correctAnswer: 2,
+        level: 'expert',
+        elo: 1470,
+    },
 ];
 
 interface LevelTestProps {
-    onComplete: (score: number, recommendedLevel: DifficultyLevel) => void;
+    onComplete: (score: number, recommendedLevel: DifficultyLevel, calibratedElo?: number) => void;
     onBack: () => void;
 }
 
@@ -111,31 +142,51 @@ export default function LevelTest({ onComplete, onBack }: LevelTestProps) {
         setAnswers(newAnswers);
 
         if (currentQuestionIndex < TEST_QUESTIONS.length - 1) {
-            // Move to next question
             setCurrentQuestionIndex(currentQuestionIndex + 1);
             setSelectedOption(null);
         } else {
-            // Test completed - calculate score
             const score = calculateScore(newAnswers);
-            const recommendedLevel = getRecommendedLevel(score);
-            onComplete(score, recommendedLevel);
+            const calibratedElo = calculateCalibratedElo(newAnswers);
+            const recommendedLevel = getRecommendedLevel(calibratedElo);
+            onComplete(score, recommendedLevel, calibratedElo);
+        }
+    };
+
+    const handleSkip = () => {
+        // -1 = skipped, treated as wrong
+        const newAnswers = [...answers, -1];
+        setAnswers(newAnswers);
+
+        if (currentQuestionIndex < TEST_QUESTIONS.length - 1) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+            setSelectedOption(null);
+        } else {
+            const score = calculateScore(newAnswers);
+            const calibratedElo = calculateCalibratedElo(newAnswers);
+            const recommendedLevel = getRecommendedLevel(calibratedElo);
+            onComplete(score, recommendedLevel, calibratedElo);
         }
     };
 
     const calculateScore = (answers: number[]): number => {
-        let correctCount = 0;
-        TEST_QUESTIONS.forEach((question, index) => {
-            if (answers[index] === question.correctAnswer) {
-                correctCount++;
-            }
-        });
-        return correctCount;
+        return TEST_QUESTIONS.reduce((count, question, index) => {
+            return count + (answers[index] === question.correctAnswer ? 1 : 0);
+        }, 0);
     };
 
-    const getRecommendedLevel = (score: number): DifficultyLevel => {
-        if (score <= 2) return 'beginner';
-        if (score === 3) return 'intermediate';
-        if (score === 4) return 'advanced';
+    /** Average ELO of correctly answered questions, defaulting to 800 if none correct */
+    const calculateCalibratedElo = (answers: number[]): number => {
+        const correctElos = TEST_QUESTIONS
+            .filter((q, i) => answers[i] === q.correctAnswer)
+            .map(q => q.elo);
+        if (correctElos.length === 0) return 800;
+        return Math.round(correctElos.reduce((a, b) => a + b, 0) / correctElos.length);
+    };
+
+    const getRecommendedLevel = (elo: number): DifficultyLevel => {
+        if (elo < 950) return 'beginner';
+        if (elo < 1150) return 'intermediate';
+        if (elo < 1350) return 'advanced';
         return 'expert';
     };
 
@@ -231,25 +282,33 @@ export default function LevelTest({ onComplete, onBack }: LevelTestProps) {
                         })}
                     </div>
 
-                    {/* Next Button */}
-                    <button
-                        onClick={handleNext}
-                        disabled={selectedOption === null}
-                        className={`
-                        w-full py-3 md:py-4 rounded-lg md:rounded-xl font-bold text-base md:text-lg transition-all
-                        ${selectedOption !== null
-                                ? 'bg-cyan-500 text-white hover:scale-[1.02] active:scale-95'
-                                : 'bg-slate-700/50 text-slate-500 cursor-not-allowed'
-                            }
-                    `}
-                    >
-                        {currentQuestionIndex < TEST_QUESTIONS.length - 1 ? 'Câu tiếp theo →' : (
-                            <span className="flex items-center justify-center gap-2">
-                                Xem kết quả
-                                <TargetIcon className="w-4 h-4" />
-                            </span>
-                        )}
-                    </button>
+                    {/* Next / Skip Buttons */}
+                    <div className="space-y-2">
+                        <button
+                            onClick={handleNext}
+                            disabled={selectedOption === null}
+                            className={`
+                            w-full py-3 md:py-4 rounded-lg md:rounded-xl font-bold text-base md:text-lg transition-all
+                            ${selectedOption !== null
+                                    ? 'bg-cyan-500 text-white hover:scale-[1.02] active:scale-95'
+                                    : 'bg-slate-700/50 text-slate-500 cursor-not-allowed'
+                                }
+                        `}
+                        >
+                            {currentQuestionIndex < TEST_QUESTIONS.length - 1 ? 'Câu tiếp theo →' : (
+                                <span className="flex items-center justify-center gap-2">
+                                    Xem kết quả
+                                    <TargetIcon className="w-4 h-4" />
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={handleSkip}
+                            className="w-full py-2 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                        >
+                            Bỏ qua câu này
+                        </button>
+                    </div>
                 </div>
 
                 {/* Helper Text */}
@@ -261,3 +320,4 @@ export default function LevelTest({ onComplete, onBack }: LevelTestProps) {
         </div>
     );
 }
+

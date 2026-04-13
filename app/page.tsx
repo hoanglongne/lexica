@@ -180,8 +180,9 @@ export default function Home() {
       <div className="relative min-h-screen flex flex-col items-center justify-center bg-slate-900 px-4 py-8">
         <LevelTestResult
           score={testScore}
-          totalQuestions={5}
+          totalQuestions={10}
           recommendedLevel={recommendedLevel}
+          calibratedElo={userStats.currentElo}
           onAccept={acceptRecommendedLevel}
           onChooseManually={skipToManual}
         />
@@ -289,8 +290,8 @@ export default function Home() {
             <button
               onClick={() => setSwipeMode(isVoiceMode ? 'touch' : 'voice')}
               className={`shrink-0 p-2 px-3 rounded-lg border text-xs font-semibold transition-colors active:scale-95 flex items-center gap-1.5 ${isVoiceMode
-                  ? 'bg-cyan-500/12 border-cyan-400/35 text-cyan-200'
-                  : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-cyan-500'
+                ? 'bg-cyan-500/12 border-cyan-400/35 text-cyan-200'
+                : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-cyan-500'
                 }`}
             >
               {isVoiceMode ? <Mic className="w-3.5 h-3.5" /> : <Hand className="w-3.5 h-3.5" />}

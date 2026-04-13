@@ -7,6 +7,7 @@ interface LevelTestResultProps {
     score: number;
     totalQuestions: number;
     recommendedLevel: DifficultyLevel;
+    calibratedElo?: number;
     onAccept: () => void;
     onChooseManually: () => void;
 }
@@ -19,7 +20,7 @@ const LEVEL_INFO = {
         bgColor: 'bg-green-500/10',
         borderColor: 'border-green-500/30',
         description: 'Bạn đang ở giai đoạn xây dựng nền tảng. Từ vựng cơ bản sẽ giúp bạn tự tin hơn!',
-        cardCount: '~10 từ',
+        cardCount: '40 từ',
         eloRange: 'ELO 800-950'
     },
     intermediate: {
@@ -29,8 +30,8 @@ const LEVEL_INFO = {
         bgColor: 'bg-cyan-500/10',
         borderColor: 'border-cyan-500/30',
         description: 'Bạn đã có nền tảng tốt! Các từ vựng phổ biến trong IELTS sẽ nâng band điểm của bạn.',
-        cardCount: '~25 từ',
-        eloRange: 'ELO 900-1200'
+        cardCount: '72 từ',
+        eloRange: 'ELO 950-1200'
     },
     advanced: {
         icon: Sparkles,
@@ -39,7 +40,7 @@ const LEVEL_INFO = {
         bgColor: 'bg-purple-500/10',
         borderColor: 'border-purple-500/30',
         description: 'Ấn tượng! Bạn đã sẵn sàng với từ vựng học thuật phức tạp hơn.',
-        cardCount: '~30 từ',
+        cardCount: '98 từ',
         eloRange: 'ELO 1100-1400'
     },
     expert: {
@@ -49,8 +50,8 @@ const LEVEL_INFO = {
         bgColor: 'bg-yellow-500/10',
         borderColor: 'border-yellow-500/30',
         description: 'Xuất sắc! Bạn thuộc top tier. Từ vựng advanced cho band 8+ đang chờ bạn!',
-        cardCount: '~30 từ',
-        eloRange: 'ELO 1300-1500'
+        cardCount: '90 từ',
+        eloRange: 'ELO 1350-1500'
     }
 };
 
@@ -58,6 +59,7 @@ export default function LevelTestResult({
     score,
     totalQuestions,
     recommendedLevel,
+    calibratedElo,
     onAccept,
     onChooseManually
 }: LevelTestResultProps) {
@@ -97,6 +99,12 @@ export default function LevelTestResult({
                         <div className="text-lg md:text-xl text-slate-300">
                             {percentage}% chính xác
                         </div>
+                        {calibratedElo !== undefined && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-700/60 rounded-full text-sm font-mono text-cyan-400 border border-cyan-500/20">
+                                <TargetIcon className="w-3.5 h-3.5" />
+                                ELO khởi điểm: {calibratedElo}
+                            </div>
+                        )}
                     </div>
 
                     {/* Progress Bar */}

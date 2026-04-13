@@ -68,7 +68,7 @@ interface LexicaStore {
     // Test flow actions
     startTest: () => void;
     skipToManual: () => void;
-    completeTest: (score: number, recommendedLevel: DifficultyLevel) => void;
+    completeTest: (score: number, recommendedLevel: DifficultyLevel, calibratedElo?: number) => void;
     acceptRecommendedLevel: () => void;
 
     // Story Mode actions
@@ -260,15 +260,21 @@ export const useLexicaStore = create<LexicaStore>()(
             skipToManual: () => {
                 set({
                     hasSeenWelcome: true,
-                    isInTest: false
+                    isInTest: false,
+                    testScore: null,
+                    recommendedLevel: null
                 });
             },
 
-            completeTest: (score, recommendedLevel) => {
+            completeTest: (score, recommendedLevel, calibratedElo) => {
+                const { userStats } = get();
                 set({
                     isInTest: false,
                     testScore: score,
-                    recommendedLevel: recommendedLevel
+                    recommendedLevel: recommendedLevel,
+                    ...(calibratedElo !== undefined && {
+                        userStats: { ...userStats, currentElo: calibratedElo },
+                    }),
                 });
             },
 
