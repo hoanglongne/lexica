@@ -1,13 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Trophy, Save, Sparkles, BookMarked } from 'lucide-react';
+import { BookOpen, Trophy, Save, Sparkles, BookMarked, Flame, MousePointerClick, Target } from 'lucide-react';
 import { useLexicaStore } from '../store/lexicaStore';
 import { STORIES, getStoryLearnedCount, isStoryPreviewVisible, isStoryUnlocked } from '../data/stories';
 import LearnedWordsList from '../components/LearnedWordsList';
+import SRSCalendar from '../components/SRSCalendar';
 import StoryUnlockModal from '../components/StoryUnlockModal';
 import StoryMode from '../components/StoryMode';
+import OnboardingModal from '../components/OnboardingModal';
 import { AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 
 function getLevelLabel(level: string) {
     switch (level) {
@@ -40,6 +43,7 @@ function getLevelBadgeClasses(level: string) {
 }
 
 export default function LearnedPage() {
+    const [showHelp, setShowHelp] = useState(false);
     const learnedCount = useLexicaStore(state => state.learnedWords.size);
     const learnedWords = useLexicaStore(state => state.learnedWords);
     const masteredCount = useLexicaStore(state => state.getMasteredWordsCount());
@@ -53,10 +57,25 @@ export default function LearnedPage() {
     const closeStoryUnlockModal = useLexicaStore(state => state.closeStoryUnlockModal);
     const markStoryAsRead = useLexicaStore(state => state.markStoryAsRead);
     const learnedWordIds = Array.from(learnedWords);
+    const cardProgress = useLexicaStore(state => state.cardProgress);
+    const userStats = useLexicaStore(state => state.userStats);
+    const currentStreak = useLexicaStore(state => state.currentStreak);
+    const longestStreak = useLexicaStore(state => state.longestStreak);
     const visibleStories = STORIES.filter(story => isStoryPreviewVisible(story, learnedWordIds));
 
     return (
         <div className="min-h-screen bg-slate-900 px-4 py-8">
+            {showHelp && (
+                <OnboardingModal onComplete={() => setShowHelp(false)} />
+            )}
+            {/* Help Button */}
+            <button
+                onClick={() => setShowHelp(true)}
+                className="fixed bottom-5 right-5 z-50 w-8 h-8 rounded-full bg-slate-700 border border-slate-600 hover:border-cyan-500 hover:bg-slate-600 transition-colors flex items-center justify-center text-slate-400 hover:text-cyan-400 text-sm font-bold"
+                aria-label="Hướng dẫn"
+            >
+                ?
+            </button>
             {/* Header */}
             <div className="max-w-2xl mx-auto mb-8">
                 <Link
@@ -74,7 +93,7 @@ export default function LearnedPage() {
                             Từ đã học
                         </h1>
                     </div>
-                    <div className="flex items-center justify-center gap-8 text-base">
+                    <div className="flex items-center justify-center gap-8 text-base flex-wrap">
                         <div className="flex items-center gap-2">
                             <span className="text-slate-400">Tổng số:</span>
                             <span className="text-cyan-400 font-bold text-2xl">{learnedCount}</span>
@@ -85,6 +104,14 @@ export default function LearnedPage() {
                             <span className="text-yellow-400 font-bold text-2xl flex items-center gap-1.5">
                                 {masteredCount}
                                 <Trophy className="w-5 h-5" />
+                            </span>
+                        </div>
+                        <div className="w-px h-8 bg-slate-700"></div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-slate-400">Stories:</span>
+                            <span className="text-purple-400 font-bold text-2xl flex items-center gap-1.5">
+                                {unlockedStories.length}<span className="text-slate-600 text-lg">/{STORIES.length}</span>
+                                <BookMarked className="w-5 h-5" />
                             </span>
                         </div>
                     </div>
@@ -107,15 +134,116 @@ export default function LearnedPage() {
                 )}
             </div>
 
+            {/* Streak + Quick Stats */}
+            <div className="max-w-2xl mx-auto mb-8 space-y-3">
+                {/* Streak Card */}
+                {(() => {
+                    const MILESTONES = [3, 7, 14, 30, 60, 100];
+                    const MAX_TRACK = 100;
+                    const fillPct = Math.min((currentStreak / MAX_TRACK) * 100, 100);
+                    const nextMilestone = MILESTONES.find(m => m > currentStreak) ?? null;
+                    const MILESTONE_LABELS: Record<number, string> = { 3: '3 ngày', 7: '1 tuần', 14: '2 tuần', 30: '1 tháng', 60: '2 tháng', 100: '100 ngày' };
+                    return (
+                        <div className={`rounded-xl border p-5 ${currentStreak >= 7 ? 'bg-orange-500/8 border-orange-500/30' : currentStreak >= 3 ? 'bg-amber-500/8 border-amber-500/20' : 'bg-slate-800/40 border-slate-700'}`}>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2.5 rounded-xl ${currentStreak >= 7 ? 'bg-orange-500/20' : 'bg-slate-700/60'}`}>
+                                        <Flame className={`w-6 h-6 ${currentStreak >= 7 ? 'text-orange-400' : currentStreak >= 3 ? 'text-amber-400' : 'text-slate-500'}`} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-slate-500 uppercase tracking-wider font-medium">Streak</div>
+                                        <div className={`text-2xl font-bold ${currentStreak >= 7 ? 'text-orange-400' : currentStreak >= 3 ? 'text-amber-400' : 'text-slate-300'}`}>
+                                            {currentStreak} <span className="text-base font-normal text-slate-400">ngày liên tiếp</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {longestStreak > 0 && (
+                                    <div className="text-right">
+                                        <div className="text-xs text-slate-600">Kỷ lục</div>
+                                        <div className="text-sm font-bold text-slate-400">{longestStreak} ngày</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Milestone track — proportional 0→100 days */}
+                            <div className="space-y-1.5">
+                                <div className="relative h-2 bg-slate-800 rounded-full">
+                                    {/* Fill bar */}
+                                    <div
+                                        className={`absolute left-0 top-0 h-full rounded-full transition-all duration-700 ${currentStreak >= 30 ? 'bg-linear-to-r from-orange-500 to-red-400' : currentStreak >= 7 ? 'bg-linear-to-r from-amber-400 to-orange-500' : 'bg-amber-500'}`}
+                                        style={{ width: `${fillPct}%` }}
+                                    />
+                                    {/* Milestone markers on the track */}
+                                    {MILESTONES.map(m => (
+                                        <div
+                                            key={m}
+                                            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+                                            style={{ left: `${(m / MAX_TRACK) * 100}%` }}
+                                        >
+                                            <div className={`w-2.5 h-2.5 rounded-full border-2 transition-colors duration-500 ${currentStreak >= m ? 'bg-orange-400 border-orange-300' : 'bg-slate-700 border-slate-600'}`} />
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Labels directly under each marker */}
+                                <div className="relative h-4">
+                                    {MILESTONES.map(m => (
+                                        <span
+                                            key={m}
+                                            className={`absolute text-[9px] -translate-x-1/2 transition-colors font-mono ${currentStreak >= m ? 'text-orange-400/80' : 'text-slate-600'}`}
+                                            style={{ left: `${(m / MAX_TRACK) * 100}%` }}
+                                        >
+                                            {MILESTONE_LABELS[m]}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="text-right mt-1">
+                                    <span className="text-[11px] text-slate-500">
+                                        {nextMilestone ? `${nextMilestone - currentStreak} ngày nữa đến mốc ${MILESTONE_LABELS[nextMilestone]}` : '🏆 Đã đạt tất cả mốc!'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                {/* Quick Stats Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-800/40 border border-slate-700 rounded-xl p-4 flex items-center gap-3">
+                        <MousePointerClick className="w-5 h-5 text-slate-400 shrink-0" />
+                        <div>
+                            <div className="text-xs text-slate-500">Tổng số swipe</div>
+                            <div className="text-xl font-bold text-white">{userStats.totalSwipes}</div>
+                        </div>
+                    </div>
+                    <div className="bg-slate-800/40 border border-slate-700 rounded-xl p-4 flex items-center gap-3">
+                        <Target className="w-5 h-5 text-cyan-400 shrink-0" />
+                        <div>
+                            <div className="text-xs text-slate-500">Độ chính xác</div>
+                            <div className="text-xl font-bold text-cyan-400">
+                                {userStats.totalSwipes > 0 ? Math.round((userStats.correctSwipes / userStats.totalSwipes) * 100) : 0}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* SRS Calendar */}
+            <div className="max-w-2xl mx-auto mb-8">
+                <SRSCalendar cardProgress={cardProgress} />
+            </div>
+
             {/* Stories Section */}
             {visibleStories.length > 0 && (
-                <div className="mb-8 bg-slate-800/30 border border-slate-700 rounded-xl p-6">
+                <div className="max-w-2xl mx-auto mb-8 bg-slate-800/30 border border-slate-700 rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <BookMarked className="w-6 h-6 text-cyan-400" />
                         <h2 className="text-2xl font-bold text-white">Story Packs</h2>
+                        <span className="ml-auto px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 text-xs font-medium">
+                            {visibleStories.length}
+                        </span>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-100 overflow-y-auto pr-1">
                         {visibleStories.map((story) => {
                             const storyId = story.id;
                             const isRead = readStories.includes(storyId);
@@ -132,8 +260,8 @@ export default function LearnedPage() {
                                         }
                                     }}
                                     className={`w-full px-4 py-4 rounded-lg border transition-all text-left group ${unlocked
-                                            ? 'bg-slate-700/30 hover:bg-slate-700/50 border-slate-600/30 hover:border-cyan-500/50'
-                                            : 'bg-slate-800/40 border-slate-700/50 cursor-default'
+                                        ? 'bg-slate-700/30 hover:bg-slate-700/50 border-slate-600/30 hover:border-cyan-500/50'
+                                        : 'bg-slate-800/40 border-slate-700/50 cursor-default'
                                         }`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
@@ -161,7 +289,7 @@ export default function LearnedPage() {
                                                             Unread
                                                         </span>
                                                     )}
-                                                    {!unlocked && learnedCountForStory >= 5 && (
+                                                    {!unlocked && learnedCountForStory >= 2 && (
                                                         <span className="px-2 py-1 rounded-full bg-slate-700 text-slate-300 text-xs font-medium">
                                                             Preview
                                                         </span>
@@ -173,9 +301,9 @@ export default function LearnedPage() {
                                                     )}
                                                 </div>
 
-                                                <div className="h-2 rounded-full bg-slate-800 overflow-hidden mb-3">
+                                                <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden mb-3">
                                                     <div
-                                                        className={`h-full transition-all duration-500 ${unlocked ? 'bg-linear-to-r from-cyan-500 to-green-400' : 'bg-linear-to-r from-slate-500 to-cyan-500'}`}
+                                                        className={`h-full transition-all duration-500 ${unlocked ? 'bg-cyan-400' : 'bg-slate-500'}`}
                                                         style={{ width: `${(learnedCountForStory / 10) * 100}%` }}
                                                     />
                                                 </div>
@@ -197,9 +325,7 @@ export default function LearnedPage() {
                         })}
                     </div>
 
-                    <p className="text-xs text-slate-500 mt-4 text-center">
-                        Story sẽ ló diện từ 5/10 từ và mở khóa hoàn toàn ở 10/10 từ trong cùng một pack
-                    </p>
+
                 </div>
             )}
 

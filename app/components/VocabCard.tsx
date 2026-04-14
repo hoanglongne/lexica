@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Sprout, Leaf, Sparkles, Trophy, Swords, Eye, Volume2, Check, X as XIcon, Mic, RotateCcw } from 'lucide-react';
 import { useVocalSwipe } from '../hooks/useVocalSwipe';
 import { useLexicaStore } from '../store/lexicaStore';
+import ReviewQuiz from './ReviewQuiz';
 
 export type CardState = 'seed' | 'sprout' | 'gold' | 'mastered';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
@@ -186,6 +187,8 @@ export default function VocabCard({ card, index, onSwipe, revealed: controlledRe
                                 </button>
                                 {index === 0 && <p className="text-xs text-slate-500 text-center hidden lg:block">Space: Xem nghĩa • ← Quên • → Nhớ</p>}
                             </div>
+                        ) : isReviewCard && index === 0 ? (
+                            <ReviewQuiz card={card} onSwipe={onSwipe} />
                         ) : (
                             <div className="px-4 py-3 rounded-lg bg-slate-700/80 border border-slate-600 w-full">
                                 <div className="flex items-center justify-center gap-2 mb-1">

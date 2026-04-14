@@ -124,9 +124,9 @@
   => Chọn option A
 
 ### Priority P2 — Content
-- [ ] **Làm giàu list từ vựng** — thêm 300-400 cards mới (target: 500+ total)
+- [x] **Làm giàu list từ vựng** — thêm 300-400 cards mới (target: 500+ total)
   - Approach: Thêm vào `vocabCards.ts`, phân bổ đều theo 4 levels
-- [ ] **Cải thiện test đầu vào** cho ELO chính xác hơn
+- [x] **Cải thiện test đầu vào** cho ELO chính xác hơn
   - Hiện tại: 5 MCQ → 1 trong 4 levels
   - Cải thiện: 8-10 câu, mỗi câu có ELO riêng, average ELO của câu đúng → calibrate userELO chính xác
 

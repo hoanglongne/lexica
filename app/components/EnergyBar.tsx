@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, AlertTriangle, Skull } from 'lucide-react';
+import { Zap, AlertTriangle, Skull, Flame } from 'lucide-react';
 
 interface EnergyBarProps {
     currentEnergy: number;
     maxEnergy: number;
+    streak?: number;
 }
 
-export default function EnergyBar({ currentEnergy, maxEnergy }: EnergyBarProps) {
+export default function EnergyBar({ currentEnergy, maxEnergy, streak = 0 }: EnergyBarProps) {
     const percentage = (currentEnergy / maxEnergy) * 100;
     const [mounted, setMounted] = useState(false);
 
@@ -31,10 +32,19 @@ export default function EnergyBar({ currentEnergy, maxEnergy }: EnergyBarProps) 
                             Energy
                         </span>
                     </div>
-                    <div className="text-lg font-bold text-white">
-                        <span className="text-cyan-400">{currentEnergy}</span>
-                        <span className="text-slate-500 mx-1">/</span>
-                        <span className="text-slate-400">{maxEnergy}</span>
+                    <div className="flex items-center gap-3">
+                        {/* Streak Badge */}
+                        {streak > 0 && (
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-bold ${streak >= 7 ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-slate-700/60 text-slate-300 border border-slate-600/30'}`}>
+                                <Flame className={`w-3.5 h-3.5 ${streak >= 7 ? 'text-orange-400' : 'text-slate-400'}`} />
+                                {streak}
+                            </div>
+                        )}
+                        <div className="text-lg font-bold text-white">
+                            <span className="text-cyan-400">{currentEnergy}</span>
+                            <span className="text-slate-500 mx-1">/</span>
+                            <span className="text-slate-400">{maxEnergy}</span>
+                        </div>
                     </div>
                 </div>
 

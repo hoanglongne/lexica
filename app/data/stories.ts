@@ -95,7 +95,8 @@ export function getStoryLearnedCount(story: Story, learnedWordIds: string[]): nu
 }
 
 export function isStoryPreviewVisible(story: Story, learnedWordIds: string[]): boolean {
-    return getStoryLearnedCount(story, learnedWordIds) >= 5;
+    // Show preview once the user has learned at least 2 words specific to this story.
+    return getStoryLearnedCount(story, learnedWordIds) >= 2;
 }
 
 export function isStoryUnlocked(story: Story, learnedWordIds: string[]): boolean {

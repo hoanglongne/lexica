@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { TrendingUp, MousePointerClick, Target, BookOpen, Award, Clock, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check, Mic, Hand } from 'lucide-react';
+import { TrendingUp, BookOpen, Award, Clock, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check, Mic, Hand, Flame } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import EnergyBar from './components/EnergyBar';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -22,6 +22,8 @@ import { getDifficultyAnalysis, getProgressStats } from './lib/eloAlgorithm';
 export default function Home() {
   const energy = useLexicaStore(state => state.energy);
   const maxEnergy = useLexicaStore(state => state.maxEnergy);
+  const currentStreak = useLexicaStore(state => state.currentStreak);
+  const longestStreak = useLexicaStore(state => state.longestStreak);
   const userStats = useLexicaStore(state => state.userStats);
   const cardProgress = useLexicaStore(state => state.cardProgress);
   const learnedCount = useLexicaStore(state => state.learnedWords.size);
@@ -46,6 +48,7 @@ export default function Home() {
   const showStoryUnlock = useLexicaStore(state => state.showStoryUnlock);
   const showStoryMode = useLexicaStore(state => state.showStoryMode);
   const currentStoryId = useLexicaStore(state => state.currentStoryId);
+  const unlockedStories = useLexicaStore(state => state.unlockedStories);
   const openStory = useLexicaStore(state => state.openStory);
   const closeStory = useLexicaStore(state => state.closeStory);
   const closeStoryUnlockModal = useLexicaStore(state => state.closeStoryUnlockModal);
@@ -215,17 +218,24 @@ export default function Home() {
         </h1>
       </div>
 
-      {/* Help Button - fixed bottom right */}
+      {/* Help Button - top-left on mobile, bottom-right on desktop */}
       <button
         onClick={() => setShowOnboarding(true)}
-        className="fixed bottom-5 right-5 z-50 w-8 h-8 rounded-full bg-slate-700 border border-slate-600 hover:border-cyan-500 hover:bg-slate-600 transition-colors flex items-center justify-center text-slate-400 hover:text-cyan-400 text-sm font-bold"
+        className="lg:hidden fixed top-25.5 left-4 z-50 w-8 h-8 rounded-full bg-slate-700 border border-slate-600 hover:border-cyan-500 hover:bg-slate-600 transition-colors flex items-center justify-center text-slate-400 hover:text-cyan-400 text-sm font-bold"
+        aria-label="Hướng dẫn"
+      >
+        ?
+      </button>
+      <button
+        onClick={() => setShowOnboarding(true)}
+        className="hidden lg:flex fixed bottom-5 right-5 z-50 w-8 h-8 rounded-full bg-slate-700 border border-slate-600 hover:border-cyan-500 hover:bg-slate-600 transition-colors items-center justify-center text-slate-400 hover:text-cyan-400 text-sm font-bold"
         aria-label="Hướng dẫn"
       >
         ?
       </button>
 
       {/* Energy Bar Header */}
-      <EnergyBar currentEnergy={energy} maxEnergy={maxEnergy} />
+      <EnergyBar currentEnergy={energy} maxEnergy={maxEnergy} streak={currentStreak} />
 
       {/* Mobile Quick Level Switch */}
       <div className="lg:hidden fixed top-[102px] right-4 z-40">
@@ -348,30 +358,23 @@ export default function Home() {
             <div className="hidden lg:block space-y-3">
               <h3 className="text-slate-400 text-xs uppercase tracking-wider font-medium">Performance</h3>
 
+              <div className="flex justify-between items-center group" title="Streak ngày liên tiếp">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-orange-400" />
+                  <span className="text-slate-300 text-sm">Streak</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-orange-400 font-semibold">{currentStreak} ngày</span>
+                  {longestStreak > 0 && <span className="text-xs text-slate-500">(best: {longestStreak})</span>}
+                </div>
+              </div>
+
               <div className="flex justify-between items-center group" title="Your current ELO rating">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-cyan-400" />
                   <span className="text-slate-300 text-sm">ELO Rating</span>
                 </div>
                 <span className="text-cyan-400 font-mono font-semibold">{userStats.currentElo}</span>
-              </div>
-
-              <div className="flex justify-between items-center group" title="Total number of swipes">
-                <div className="flex items-center gap-2">
-                  <MousePointerClick className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-300 text-sm">Total Swipes</span>
-                </div>
-                <span className="text-white font-semibold">{userStats.totalSwipes}</span>
-              </div>
-
-              <div className="flex justify-between items-center group" title="Percentage of correct answers">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-300 text-sm">Accuracy</span>
-                </div>
-                <span className="text-white font-semibold">
-                  {userStats.totalSwipes > 0 ? Math.round((userStats.correctSwipes / userStats.totalSwipes) * 100) : 0}%
-                </span>
               </div>
             </div>
 
@@ -384,7 +387,7 @@ export default function Home() {
                   <BookOpen className="w-4 h-4 text-cyan-400" />
                   <span className="text-slate-300 text-sm">Learned</span>
                 </div>
-                <span className="text-cyan-400 font-semibold">{progressStats.total}</span>
+                <span className="text-cyan-400 font-semibold">{learnedCount}</span>
               </div>
 
               <div className="flex justify-between items-center" title="Words you've fully mastered">
@@ -507,28 +510,21 @@ export default function Home() {
 
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
+                      <Flame className="w-4 h-4 text-orange-400" />
+                      <span className="text-slate-300 text-sm">Streak</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-orange-400 font-semibold">{currentStreak} ngày</span>
+                      {longestStreak > 0 && <span className="text-xs text-slate-500">(best: {longestStreak})</span>}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-cyan-400" />
                       <span className="text-slate-300 text-sm">ELO Rating</span>
                     </div>
                     <span className="text-cyan-400 font-mono font-semibold">{userStats.currentElo}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <MousePointerClick className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-300 text-sm">Total Swipes</span>
-                    </div>
-                    <span className="text-white font-semibold">{userStats.totalSwipes}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Target className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-300 text-sm">Accuracy</span>
-                    </div>
-                    <span className="text-white font-semibold">
-                      {userStats.totalSwipes > 0 ? Math.round((userStats.correctSwipes / userStats.totalSwipes) * 100) : 0}%
-                    </span>
                   </div>
                 </div>
 
@@ -541,7 +537,7 @@ export default function Home() {
                       <BookOpen className="w-4 h-4 text-cyan-400" />
                       <span className="text-slate-300 text-sm">Learned</span>
                     </div>
-                    <span className="text-cyan-400 font-semibold">{progressStats.total}</span>
+                    <span className="text-cyan-400 font-semibold">{learnedCount}</span>
                   </div>
 
                   <div className="flex justify-between items-center">

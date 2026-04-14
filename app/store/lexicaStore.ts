@@ -49,6 +49,11 @@ interface LexicaStore {
     showStoryUnlock: boolean; // Show "Story Unlocked!" modal
     showStoryMode: boolean; // Show story reading screen
 
+    // Streak
+    currentStreak: number;
+    longestStreak: number;
+    lastActivityDate: string | null; // 'YYYY-MM-DD'
+
     // Onboarding
     hasSeenOnboarding: boolean;
     completeOnboarding: () => void;
@@ -95,6 +100,23 @@ const INITIAL_USER_STATS: UserStats = {
 };
 
 /**
+ * Get today's date as 'YYYY-MM-DD' in local time
+ */
+function getTodayDateString(): string {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Get yesterday's date as 'YYYY-MM-DD' in local time
+ */
+function getYesterdayDateString(): string {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+}
+
+/**
  * Get midnight timestamp for today
  */
 function getMidnightTimestamp(): number {
@@ -123,6 +145,9 @@ export const useLexicaStore = create<LexicaStore>()(
             lastEnergyReset: getMidnightTimestamp(),
             currentDeck: [],
             selectedLevel: null, // User hasn't selected level yet
+            currentStreak: 0,
+            longestStreak: 0,
+            lastActivityDate: null,
             swipeMode: 'touch',
             setSwipeMode: (mode) => set({ swipeMode: mode }),
 
@@ -167,11 +192,26 @@ export const useLexicaStore = create<LexicaStore>()(
                 // Remove swiped card from deck
                 const updatedDeck = currentDeck.filter(card => card.id !== cardId);
 
+                // Update streak
+                const today = getTodayDateString();
+                const { currentStreak, longestStreak, lastActivityDate } = get();
+                let streakUpdate = {};
+                if (lastActivityDate !== today) {
+                    const yesterday = getYesterdayDateString();
+                    const newStreak = lastActivityDate === yesterday ? currentStreak + 1 : 1;
+                    streakUpdate = {
+                        currentStreak: newStreak,
+                        longestStreak: Math.max(longestStreak, newStreak),
+                        lastActivityDate: today,
+                    };
+                }
+
                 set({
                     userStats: updatedStats,
                     cardProgress: updatedCardProgress,
                     learnedWords: updatedLearnedWords,
                     currentDeck: updatedDeck,
+                    ...streakUpdate,
                 });
 
                 // Check if user should unlock a story (every 10 words)
@@ -239,6 +279,10 @@ export const useLexicaStore = create<LexicaStore>()(
                     currentStoryId: null,
                     showStoryUnlock: false,
                     showStoryMode: false,
+                    // Reset streak
+                    currentStreak: 0,
+                    longestStreak: 0,
+                    lastActivityDate: null,
                 });
             },
 
@@ -366,6 +410,10 @@ export const useLexicaStore = create<LexicaStore>()(
                 hasSeenOnboarding: state.hasSeenOnboarding,
                 testScore: state.testScore, // Persist test score
                 recommendedLevel: state.recommendedLevel, // Persist recommendation
+                // Streak persistence
+                currentStreak: state.currentStreak,
+                longestStreak: state.longestStreak,
+                lastActivityDate: state.lastActivityDate,
                 // Story Mode persistence
                 unlockedStories: state.unlockedStories,
                 readStories: state.readStories,

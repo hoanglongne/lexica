@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, X, Zap, Mic, BookOpen, Trophy } from 'lucide-react';
+import { ChevronRight, ChevronLeft, X, Zap, Mic, BookOpen, Trophy, Sprout, Leaf, Sparkles, Flame } from 'lucide-react';
 
 interface OnboardingModalProps {
     onComplete: () => void;
@@ -48,6 +48,28 @@ const STEPS = [
         title: 'Hệ thống ôn tập thông minh',
         body: 'Mỗi từ bạn học sẽ được lên lịch ôn tập tự động: 1 ngày → 3 ngày → 7 ngày → 14 ngày.',
         detail: 'Học đủ 10 từ → mở khóa Story Mode 📖. Đọc câu chuyện vô lý để ôn lại toàn bộ từ vựng đã học.',
+    },
+    {
+        icon: Sprout,
+        iconColor: 'text-emerald-400',
+        iconBg: 'bg-emerald-500/15 border-emerald-500/30',
+        title: 'Trạng thái từ vựng',
+        body: 'Mỗi từ bạn học đều có trạng thái phát triển riêng. Ôn tập đúng lịch để từ "lớn lên":',
+        detail: null,
+        cards: [
+            { icon: <Sprout className="w-4 h-4" />, label: 'Seed — Đang học', desc: 'Mới gặp, chưa vào bộ nhớ dài hạn', color: 'border-green-500/40 bg-green-500/10 text-green-300' },
+            { icon: <Leaf className="w-4 h-4" />, label: 'Sprout — Đang nhớ', desc: 'Đã ôn 1–2 lần, đang củng cố', color: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300' },
+            { icon: <Sparkles className="w-4 h-4" />, label: 'Gold — Thuộc tốt', desc: 'Nhớ vững, ôn thưa dần', color: 'border-yellow-500/40 bg-yellow-500/10 text-yellow-300' },
+            { icon: <Trophy className="w-4 h-4" />, label: 'Mastered — Thành thạo', desc: 'Nhớ lâu dài, không cần ôn nữa', color: 'border-orange-500/40 bg-orange-500/10 text-orange-300' },
+        ],
+    },
+    {
+        icon: Flame,
+        iconColor: 'text-orange-400',
+        iconBg: 'bg-orange-500/15 border-orange-500/30',
+        title: 'Streak & Trang "Đã học"',
+        body: 'Mỗi ngày bạn swipe ít nhất 1 từ = +1 streak 🔥. Bỏ 1 ngày là streak về 0. Đạt các mốc 7, 14, 30, 60, 100 ngày để tự hào.',
+        detail: 'Vào trang "Đã học" để xem toàn bộ từ vựng đã học, lịch ôn tập SRS theo ngày, tiến trình Story Pack — và nhấn vào từng từ để xem chi tiết.',
     },
 ];
 
@@ -131,7 +153,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                             <div className="space-y-2 mt-2">
                                 {currentStep.cards.map(c => (
                                     <div key={c.label} className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${c.color}`}>
-                                        <span className="text-xl font-bold w-6 text-center">{c.icon}</span>
+                                        <span className="text-xl font-bold w-5 flex items-center justify-center shrink-0">{c.icon}</span>
                                         <div>
                                             <p className="font-semibold text-sm">{c.label}</p>
                                             <p className="text-xs opacity-75 mt-0.5">{c.desc}</p>

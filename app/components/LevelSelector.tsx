@@ -126,7 +126,7 @@ export default function LevelSelector({ onSelect, currentLevel }: LevelSelectorP
 
                                 {/* Icon */}
                                 <div className="flex justify-center mb-3">
-                                    <option.icon className="w-10 h-10 text-cyan-400" />
+                                    <option.icon className="w-10 h-10 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
                                 </div>
 
                                 {/* Label */}
