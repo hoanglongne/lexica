@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { TrendingUp, BookOpen, Award, Clock, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check, Mic, Hand, Flame } from 'lucide-react';
+import { TrendingUp, BookOpen, Award, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check, Mic, Hand } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import EnergyBar from './components/EnergyBar';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -25,7 +25,6 @@ function HomeContent() {
   const energy = useLexicaStore(state => state.energy);
   const maxEnergy = useLexicaStore(state => state.maxEnergy);
   const currentStreak = useLexicaStore(state => state.currentStreak);
-  const longestStreak = useLexicaStore(state => state.longestStreak);
   const userStats = useLexicaStore(state => state.userStats);
   const cardProgress = useLexicaStore(state => state.cardProgress);
   const learnedCount = useLexicaStore(state => state.learnedWords.size);
@@ -366,30 +365,18 @@ function HomeContent() {
         <div className="w-full lg:w-72 xl:w-80 shrink-0">
           {/* Mobile Action Bar */}
           <div className="lg:hidden flex items-center justify-center gap-2 mb-4">
-            {/* Voice/Touch Toggle */}
+            {/* Stats Modal Toggle */}
             <button
-              onClick={() => setSwipeMode(isVoiceMode ? 'touch' : 'voice')}
-              className={`shrink-0 p-2 px-3 rounded-lg border text-xs font-semibold transition-colors active:scale-95 flex items-center gap-1.5 ${isVoiceMode
-                ? 'bg-cyan-500/12 border-cyan-400/35 text-cyan-200'
-                : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-cyan-500'
-                }`}
-            >
-              {isVoiceMode ? <Mic className="w-3.5 h-3.5" /> : <Hand className="w-3.5 h-3.5" />}
-              {isVoiceMode ? 'Voice' : 'Touch'}
-            </button>
-
-            {/* Stats Button */}
-            <button
-              className="flex-1 p-2 px-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95 flex items-center justify-center gap-2"
               onClick={() => setShowMobileStats(true)}
+              className="flex-1 p-2 px-3 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-cyan-500 transition-colors active:scale-95 flex items-center justify-center gap-2"
             >
               <BarChart3 className="w-4 h-4 text-cyan-400" />
-              <span className="text-slate-300 text-sm font-medium">Xem thống kê</span>
+              <span className="text-slate-300 text-sm font-medium">Cài đặt</span>
             </button>
 
             {/* Learned Words Link */}
-            <Link href="/learned" className="shrink-0">
-              <div className="p-2 px-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-cyan-500 transition-colors active:scale-95 cursor-pointer flex items-center gap-1.5">
+            <Link href="/learned" className="flex-1">
+              <div className="p-2 px-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-cyan-500 transition-colors active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
                 <BookOpen className="w-4 h-4 text-cyan-400" />
                 <span className="text-slate-300 text-sm font-medium whitespace-nowrap">Đã học</span>
                 <span className="text-cyan-400 text-sm font-semibold">({learnedCount})</span>
@@ -410,14 +397,7 @@ function HomeContent() {
           {/* Desktop Full Stats Card */}
           <div className="hidden lg:block bg-slate-800/50 border border-slate-700 rounded-xl p-5 lg:p-6 space-y-4 lg:space-y-5">
 
-            {/* Level Badge */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-700">
-              <span className="text-slate-400 text-sm">Level hiện tại</span>
-              <span className="text-white font-semibold">
-                {selectedLevel === 'all' ? 'Tất cả' : selectedLevel === 'beginner' ? 'Cơ bản' : selectedLevel === 'intermediate' ? 'Trung cấp' : selectedLevel === 'advanced' ? 'Nâng cao' : 'Chuyên gia'}
-              </span>
-            </div>
-
+            {/* Voice/Touch Mode Toggle */}
             <div className="space-y-3 pb-4 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 text-sm">Chế độ swipe</span>
@@ -437,17 +417,6 @@ function HomeContent() {
             {/* Performance Stats - Hidden on mobile, shown in compact grid above */}
             <div className="hidden lg:block space-y-3">
               <h3 className="text-slate-400 text-xs uppercase tracking-wider font-medium">Performance</h3>
-
-              <div className="flex justify-between items-center group" title="Streak ngày liên tiếp">
-                <div className="flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-orange-400" />
-                  <span className="text-slate-300 text-sm">Streak</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-orange-400 font-semibold">{currentStreak} ngày</span>
-                  {longestStreak > 0 && <span className="text-xs text-slate-500">(best: {longestStreak})</span>}
-                </div>
-              </div>
 
               <div className="flex justify-between items-center group" title="Your current ELO rating">
                 <div className="flex items-center gap-2">
@@ -477,14 +446,6 @@ function HomeContent() {
                 </div>
                 <span className="text-white font-semibold">{progressStats.mastered}</span>
               </div>
-
-              <div className="flex justify-between items-center" title="Cards due for review today">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-300 text-sm">Due Today</span>
-                </div>
-                <span className="text-white font-semibold">{progressStats.dueToday}</span>
-              </div>
             </div>
 
             {/* Learned Words Link - Desktop */}
@@ -513,6 +474,16 @@ function HomeContent() {
                   </div>
                 </Link>
               )}
+            </div>
+
+            {/* Stats Link */}
+            <div className="pt-4 border-t border-slate-700">
+              <Link href="/stats">
+                <div className="w-full px-4 py-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/15 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-300 hover:text-cyan-200 text-sm font-medium transition-all flex items-center justify-center gap-2 cursor-pointer">
+                  <BarChart3 className="w-4 h-4" />
+                  Xem thống kê chi tiết
+                </div>
+              </Link>
             </div>
 
             {/* Action Buttons */}
@@ -570,14 +541,7 @@ function HomeContent() {
 
               {/* Content */}
               <div className="p-6 space-y-5">
-                {/* Level Badge */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-700">
-                  <span className="text-slate-400 text-sm">Level hiện tại</span>
-                  <span className="text-white font-semibold">
-                    {selectedLevel === 'all' ? 'Tất cả' : selectedLevel === 'beginner' ? 'Cơ bản' : selectedLevel === 'intermediate' ? 'Trung cấp' : selectedLevel === 'advanced' ? 'Nâng cao' : 'Chuyên gia'}
-                  </span>
-                </div>
-
+                {/* Voice/Touch Mode Toggle */}
                 <div className="space-y-3 pb-4 border-b border-slate-700">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400 text-sm">Chế độ swipe</span>
@@ -600,17 +564,6 @@ function HomeContent() {
                 {/* Performance Stats */}
                 <div className="space-y-3">
                   <h3 className="text-slate-400 text-xs uppercase tracking-wider font-medium">Performance</h3>
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Flame className="w-4 h-4 text-orange-400" />
-                      <span className="text-slate-300 text-sm">Streak</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-orange-400 font-semibold">{currentStreak} ngày</span>
-                      {longestStreak > 0 && <span className="text-xs text-slate-500">(best: {longestStreak})</span>}
-                    </div>
-                  </div>
 
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
@@ -639,14 +592,6 @@ function HomeContent() {
                       <span className="text-slate-300 text-sm">Mastered</span>
                     </div>
                     <span className="text-white font-semibold">{progressStats.mastered}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-300 text-sm">Due Today</span>
-                    </div>
-                    <span className="text-white font-semibold">{progressStats.dueToday}</span>
                   </div>
                 </div>
 

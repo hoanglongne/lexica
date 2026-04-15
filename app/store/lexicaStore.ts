@@ -13,7 +13,16 @@ import { getStoryCatchUpWordIds, getUnlockableStory } from '../data/stories';
  * - Energy system (30 max, resets at midnight)
  * - Selected difficulty level
  * - Story Mode progress
+ * - Study history (for charts & analytics)
  */
+
+// Study History Entry (per day)
+interface StudyHistoryEntry {
+    swipes: number;       // Total swipes that day
+    correct: number;      // Swipes right (remember)
+    wrong: number;        // Swipes left (forget)
+    eloChange: number;    // Net ELO change that day
+}
 
 interface LexicaStore {
     // User Stats
@@ -54,6 +63,12 @@ interface LexicaStore {
     longestStreak: number;
     lastActivityDate: string | null; // 'YYYY-MM-DD'
 
+    // Highest ELO (peak rating)
+    highestElo: number;
+
+    // Study History (for analytics)
+    studyHistory: Record<string, StudyHistoryEntry>; // { '2026-04-15': {...}, ... }
+
     // Onboarding
     hasSeenOnboarding: boolean;
     completeOnboarding: () => void;
@@ -88,6 +103,7 @@ interface LexicaStore {
     getLearnedWordsCount: () => number;
     getLearnedWordsList: () => string[];
     getMasteredWordsCount: () => number;
+    getStudyStats: () => { totalDays: number; totalSwipes: number; averageAccuracy: number; last30Days: Array<{ date: string; swipes: number; accuracy: number; eloChange: number }> };
 
     // Review Session
     submitReviewAnswer: (cardId: string, correct: boolean) => void;
@@ -136,6 +152,39 @@ function shouldResetEnergy(lastResetTimestamp: number): boolean {
     return lastResetTimestamp < currentMidnight;
 }
 
+// ============================================
+// MOCK DATA GENERATOR (TEMPORARY - FOR TESTING)
+// ============================================
+function generateMockStudyHistory(): Record<string, StudyHistoryEntry> {
+    const history: Record<string, StudyHistoryEntry> = {};
+    const today = new Date();
+
+    // Generate 100 days of mock data
+    for (let i = 99; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+        // Random activity with some variance
+        const swipes = Math.floor(Math.random() * 25) + 5; // 5-30 swipes
+        const correctRate = 0.6 + Math.random() * 0.3; // 60-90% accuracy
+        const correct = Math.floor(swipes * correctRate);
+        const wrong = swipes - correct;
+
+        // ELO change varies (-20 to +30)
+        const eloChange = Math.floor(Math.random() * 50) - 20;
+
+        history[dateString] = {
+            swipes,
+            correct,
+            wrong,
+            eloChange,
+        };
+    }
+
+    return history;
+}
+
 export const useLexicaStore = create<LexicaStore>()(
     persist(
         (set, get) => ({
@@ -151,6 +200,8 @@ export const useLexicaStore = create<LexicaStore>()(
             currentStreak: 0,
             longestStreak: 0,
             lastActivityDate: null,
+            highestElo: 1000, // Initialize with starting ELO
+            studyHistory: generateMockStudyHistory(), // MOCK DATA - Replace with {} for production
             swipeMode: 'touch',
             setSwipeMode: (mode) => set({ swipeMode: mode }),
 
@@ -197,7 +248,7 @@ export const useLexicaStore = create<LexicaStore>()(
 
                 // Update streak
                 const today = getTodayDateString();
-                const { currentStreak, longestStreak, lastActivityDate } = get();
+                const { currentStreak, longestStreak, lastActivityDate, studyHistory } = get();
                 let streakUpdate = {};
                 if (lastActivityDate !== today) {
                     const yesterday = getYesterdayDateString();
@@ -209,11 +260,30 @@ export const useLexicaStore = create<LexicaStore>()(
                     };
                 }
 
+                // Update study history (for analytics)
+                const todayEntry = studyHistory[today] || { swipes: 0, correct: 0, wrong: 0, eloChange: 0 };
+                const eloChange = updatedStats.currentElo - userStats.currentElo;
+                const updatedStudyHistory = {
+                    ...studyHistory,
+                    [today]: {
+                        swipes: todayEntry.swipes + 1,
+                        correct: todayEntry.correct + (direction === 'right' ? 1 : 0),
+                        wrong: todayEntry.wrong + (direction === 'left' ? 1 : 0),
+                        eloChange: todayEntry.eloChange + eloChange,
+                    },
+                };
+
+                // Track highest ELO
+                const { highestElo } = get();
+                const newHighestElo = Math.max(highestElo, updatedStats.currentElo);
+
                 set({
                     userStats: updatedStats,
                     cardProgress: updatedCardProgress,
                     learnedWords: updatedLearnedWords,
                     currentDeck: updatedDeck,
+                    studyHistory: updatedStudyHistory,
+                    highestElo: newHighestElo,
                     ...streakUpdate,
                 });
 
@@ -350,12 +420,68 @@ export const useLexicaStore = create<LexicaStore>()(
                 ).length;
             },
 
+            // Helper: Get study statistics for analytics
+            getStudyStats: () => {
+                const { studyHistory } = get();
+                const dates = Object.keys(studyHistory).sort();
+
+                // Calculate totals
+                const totalDays = dates.length;
+                let totalSwipes = 0;
+                let totalCorrect = 0;
+
+                for (const date of dates) {
+                    const entry = studyHistory[date];
+                    totalSwipes += entry.swipes;
+                    totalCorrect += entry.correct;
+                }
+
+                const averageAccuracy = totalSwipes > 0 ? Math.round((totalCorrect / totalSwipes) * 100) : 0;
+
+                // Get last 30 days
+                const last30Days = dates.slice(-30).map(date => {
+                    const entry = studyHistory[date];
+                    const accuracy = entry.swipes > 0 ? Math.round((entry.correct / entry.swipes) * 100) : 0;
+                    return {
+                        date,
+                        swipes: entry.swipes,
+                        accuracy,
+                        eloChange: entry.eloChange,
+                    };
+                });
+
+                return {
+                    totalDays,
+                    totalSwipes,
+                    averageAccuracy,
+                    last30Days,
+                };
+            },
+
             submitReviewAnswer: (cardId, correct) => {
-                const { cardProgress } = get();
+                const { cardProgress, studyHistory } = get();
                 const existing = cardProgress[cardId];
                 if (!existing) return;
                 const updated = updateCardProgress(existing, cardId, correct ? 'right' : 'left');
-                set({ cardProgress: { ...cardProgress, [cardId]: updated } });
+
+                // Update study history for review sessions
+                const today = getTodayDateString();
+                const todayEntry = studyHistory[today] || { swipes: 0, correct: 0, wrong: 0, eloChange: 0 };
+                const updatedStudyHistory = {
+                    ...studyHistory,
+                    [today]: {
+                        ...todayEntry,
+                        swipes: todayEntry.swipes + 1,
+                        correct: todayEntry.correct + (correct ? 1 : 0),
+                        wrong: todayEntry.wrong + (correct ? 0 : 1),
+                        // Review doesn't change ELO, so eloChange stays the same
+                    },
+                };
+
+                set({
+                    cardProgress: { ...cardProgress, [cardId]: updated },
+                    studyHistory: updatedStudyHistory,
+                });
             },
 
             // Story Mode: Check if user should unlock a new story
@@ -425,6 +551,8 @@ export const useLexicaStore = create<LexicaStore>()(
                 currentStreak: state.currentStreak,
                 longestStreak: state.longestStreak,
                 lastActivityDate: state.lastActivityDate,
+                // Highest ELO
+                highestElo: state.highestElo,
                 // Story Mode persistence
                 unlockedStories: state.unlockedStories,
                 readStories: state.readStories,

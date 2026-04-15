@@ -71,3 +71,9 @@ button {
 body {
   overscroll-behavior-y: contain;
 }
+
+/* Remove focus outline from SVG elements in charts */
+svg:focus,
+svg *:focus {
+  outline: none !important;
+}
