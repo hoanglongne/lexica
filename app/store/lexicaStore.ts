@@ -88,6 +88,9 @@ interface LexicaStore {
     getLearnedWordsCount: () => number;
     getLearnedWordsList: () => string[];
     getMasteredWordsCount: () => number;
+
+    // Review Session
+    submitReviewAnswer: (cardId: string, correct: boolean) => void;
 }
 
 const INITIAL_USER_STATS: UserStats = {
@@ -345,6 +348,14 @@ export const useLexicaStore = create<LexicaStore>()(
                 return Object.values(cardProgress).filter(
                     progress => progress.state === 'mastered'
                 ).length;
+            },
+
+            submitReviewAnswer: (cardId, correct) => {
+                const { cardProgress } = get();
+                const existing = cardProgress[cardId];
+                if (!existing) return;
+                const updated = updateCardProgress(existing, cardId, correct ? 'right' : 'left');
+                set({ cardProgress: { ...cardProgress, [cardId]: updated } });
             },
 
             // Story Mode: Check if user should unlock a new story

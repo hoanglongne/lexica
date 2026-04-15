@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { TrendingUp, BookOpen, Award, Clock, Settings, RotateCcw, X, BarChart3, AlertCircle, TrendingDown, Zap, Check, Mic, Hand, Flame } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -48,15 +50,19 @@ export default function Home() {
   const showStoryUnlock = useLexicaStore(state => state.showStoryUnlock);
   const showStoryMode = useLexicaStore(state => state.showStoryMode);
   const currentStoryId = useLexicaStore(state => state.currentStoryId);
-  const unlockedStories = useLexicaStore(state => state.unlockedStories);
   const openStory = useLexicaStore(state => state.openStory);
   const closeStory = useLexicaStore(state => state.closeStory);
   const closeStoryUnlockModal = useLexicaStore(state => state.closeStoryUnlockModal);
   const markStoryAsRead = useLexicaStore(state => state.markStoryAsRead);
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const previewDue = Number(searchParams.get('reviewPreview') ?? 0);
+
   // Mobile stats modal state
   const [showMobileStats, setShowMobileStats] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showReviewPrompt, setShowReviewPrompt] = useState(() => false);
 
   // Difficulty status notification state
   const [showDifficultyStatus, setShowDifficultyStatus] = useState(false);
@@ -70,6 +76,22 @@ export default function Home() {
   // Debug: Get difficulty analysis
   const analysis = getDifficultyAnalysis(userStats);
   const progressStats = getProgressStats(cardProgress);
+  const dueToday = previewDue || progressStats.dueToday;
+
+  // Show review prompt once per day when there are due cards
+  useEffect(() => {
+    // ?reviewPreview=N forces the modal instantly (dev/preview only)
+    if (previewDue > 0) {
+      const t = setTimeout(() => setShowReviewPrompt(true), 0);
+      return () => clearTimeout(t);
+    }
+    const todayKey = `reviewPromptShown_${new Date().toDateString()}`;
+    if (progressStats.dueToday > 0 && !sessionStorage.getItem(todayKey)) {
+      sessionStorage.setItem(todayKey, '1');
+      const t = setTimeout(() => setShowReviewPrompt(true), 800);
+      return () => clearTimeout(t);
+    }
+  }, [progressStats.dueToday, previewDue]);
 
   // Get status icon and color
   const getStatusDisplay = (status: string) => {
@@ -211,6 +233,54 @@ export default function Home() {
       {(!hasSeenOnboarding || showOnboarding) && (
         <OnboardingModal onComplete={() => { completeOnboarding(); setShowOnboarding(false); }} />
       )}
+
+      {/* Review Prompt Modal */}
+      <AnimatePresence>
+        {showReviewPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 8 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+              className="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/20">
+                  <RotateCcw className="w-6 h-6 text-amber-400" />
+                </div>
+                <h2 className="text-lg font-bold text-white">Ôn tập hôm nay</h2>
+              </div>
+              <p className="text-slate-300 text-sm mb-1">
+                Bạn có <span className="text-amber-400 font-bold">{previewDue || progressStats.dueToday} từ</span> cần ôn lại hôm nay.
+              </p>
+              <p className="text-slate-500 text-xs mb-6">
+                Ôn tập giúp củng cố trí nhớ và tăng tốc độ ghi nhớ dài hạn.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowReviewPrompt(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-600 text-slate-300 text-sm font-medium hover:border-slate-500 hover:text-white transition-colors"
+                >
+                  Để sau
+                </button>
+                <button
+                  onClick={() => { setShowReviewPrompt(false); router.push('/review'); }}
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 text-sm font-bold transition-colors"
+                >
+                  Ôn ngay →
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Logo - Top Left */}
       <div className="hidden lg:block fixed top-4 left-4 md:top-6 md:left-6 z-50">
         <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
@@ -238,7 +308,7 @@ export default function Home() {
       <EnergyBar currentEnergy={energy} maxEnergy={maxEnergy} streak={currentStreak} />
 
       {/* Mobile Quick Level Switch */}
-      <div className="lg:hidden fixed top-[102px] right-4 z-40">
+      <div className="lg:hidden fixed top-25.5 right-4 z-40">
         <button
           onClick={() => setSelectedLevel(null)}
           className="px-3 py-2 rounded-lg bg-slate-800/90 border border-slate-700 hover:border-cyan-500 text-slate-200 text-xs font-medium transition-colors flex items-center gap-1.5"
@@ -325,6 +395,16 @@ export default function Home() {
                 <span className="text-cyan-400 text-sm font-semibold">({learnedCount})</span>
               </div>
             </Link>
+
+            {/* Review Link */}
+            {dueToday > 0 && (
+              <Link href="/review" className="shrink-0">
+                <div className="p-2 px-3 rounded-lg bg-amber-500/15 border border-amber-500/30 hover:border-amber-400 transition-colors active:scale-95 cursor-pointer flex items-center gap-1.5">
+                  <RotateCcw className="w-4 h-4 text-amber-400" />
+                  <span className="text-amber-300 text-sm font-medium whitespace-nowrap">Ôn ({dueToday})</span>
+                </div>
+              </Link>
+            )}
           </div>
 
           {/* Desktop Full Stats Card */}
@@ -408,7 +488,7 @@ export default function Home() {
             </div>
 
             {/* Learned Words Link - Desktop */}
-            <div className="pt-4 border-t border-slate-700">
+            <div className="pt-4 border-t border-slate-700 space-y-2">
               <Link href="/learned">
                 <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-cyan-500 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer">
                   <div className="flex items-center justify-between">
@@ -420,6 +500,19 @@ export default function Home() {
                   </div>
                 </div>
               </Link>
+              {dueToday > 0 && (
+                <Link href="/review">
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <RotateCcw className="w-4 h-4 text-amber-400" />
+                        <span className="text-amber-200 text-sm font-medium">Ôn tập hôm nay</span>
+                      </div>
+                      <span className="text-amber-400 text-sm font-semibold">{dueToday} từ</span>
+                    </div>
+                  </div>
+                </Link>
+              )}
             </div>
 
             {/* Action Buttons */}

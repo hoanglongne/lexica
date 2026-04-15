@@ -131,10 +131,10 @@
   - Cải thiện: 8-10 câu, mỗi câu có ELO riêng, average ELO của câu đúng → calibrate userELO chính xác
 
 ## Phase 8: Gamification & Engagement
-- [ ] Streak logic (daily streak để tăng gắn bó)
-- [ ] Lịch hiển thị mỗi ngày có bao nhiêu từ sẽ xuất hiện lại (SRS calendar)
-- [ ] Hiện tổng số story và đã unlock bao nhiêu
-- [ ] Test lại kiến thức ở các lần ôn tập (thay vì chỉ nhìn card)
+- [x] Streak logic (daily streak để tăng gắn bó)
+- [x] Lịch hiển thị mỗi ngày có bao nhiêu từ sẽ xuất hiện lại (SRS calendar)
+- [x] Hiện tổng số story và đã unlock bao nhiêu
+- [x] Test lại kiến thức ở các lần ôn tập (thay vì chỉ nhìn card)
 
 ## Phase 9: Stats & Analytics Dashboard
 - [ ] Heatmap (activity calendar)

@@ -93,7 +93,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center">
             {/* Backdrop */}
             <motion.div
                 initial={{ opacity: 0 }}

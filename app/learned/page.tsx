@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Trophy, Save, Sparkles, BookMarked, Flame, MousePointerClick, Target } from 'lucide-react';
+import { BookOpen, Trophy, Save, Sparkles, BookMarked, Flame, MousePointerClick, Target, RotateCcw } from 'lucide-react';
 import { useLexicaStore } from '../store/lexicaStore';
 import { STORIES, getStoryLearnedCount, isStoryPreviewVisible, isStoryUnlocked } from '../data/stories';
+import { getProgressStats } from '../lib/eloAlgorithm';
 import LearnedWordsList from '../components/LearnedWordsList';
 import SRSCalendar from '../components/SRSCalendar';
 import StoryUnlockModal from '../components/StoryUnlockModal';
@@ -62,6 +63,7 @@ export default function LearnedPage() {
     const currentStreak = useLexicaStore(state => state.currentStreak);
     const longestStreak = useLexicaStore(state => state.longestStreak);
     const visibleStories = STORIES.filter(story => isStoryPreviewVisible(story, learnedWordIds));
+    const progressStats = getProgressStats(cardProgress);
 
     return (
         <div className="min-h-screen bg-slate-900 px-4 py-8">
@@ -230,6 +232,20 @@ export default function LearnedPage() {
             {/* SRS Calendar */}
             <div className="max-w-2xl mx-auto mb-8">
                 <SRSCalendar cardProgress={cardProgress} />
+                {progressStats.dueToday > 0 && (
+                    <Link href="/review" className="mt-3 flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 transition-all hover:scale-[1.01] active:scale-95">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-amber-500/20">
+                                <RotateCcw className="w-5 h-5 text-amber-400" />
+                            </div>
+                            <div>
+                                <div className="text-amber-200 font-semibold text-sm">Ôn tập hôm nay</div>
+                                <div className="text-amber-400/70 text-xs">{progressStats.dueToday} từ cần ôn</div>
+                            </div>
+                        </div>
+                        <span className="text-amber-400 text-lg font-bold">→</span>
+                    </Link>
+                )}
             </div>
 
             {/* Stories Section */}
