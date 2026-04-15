@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
@@ -21,7 +21,7 @@ const OnboardingModal = dynamic(() => import('./components/OnboardingModal'));
 import { useLexicaStore, initializeLexicaStore } from './store/lexicaStore';
 import { getDifficultyAnalysis, getProgressStats } from './lib/eloAlgorithm';
 
-export default function Home() {
+function HomeContent() {
   const energy = useLexicaStore(state => state.energy);
   const maxEnergy = useLexicaStore(state => state.maxEnergy);
   const currentStreak = useLexicaStore(state => state.currentStreak);
@@ -708,5 +708,23 @@ export default function Home() {
         />
       )}
     </div>
+  );
+}
+
+// ─── Wrapper với Suspense boundary ────────────────────────────────────────────
+
+function HomePageFallback() {
+  return (
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full border-2 border-slate-700 border-t-cyan-400 animate-spin" />
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<HomePageFallback />}>
+      <HomeContent />
+    </Suspense>
   );
 }

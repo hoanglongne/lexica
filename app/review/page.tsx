@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -487,7 +487,7 @@ function ResultScreen({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function ReviewPage() {
+function ReviewPageContent() {
     const searchParams = useSearchParams();
     const testAll = searchParams.get('all') === '1';
 
@@ -614,5 +614,23 @@ export default function ReviewPage() {
                 </AnimatePresence>
             </div>
         </div>
+    );
+}
+
+// ─── Wrapper với Suspense boundary ────────────────────────────────────────────
+
+function ReviewPageFallback() {
+    return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-2 border-slate-700 border-t-cyan-400 animate-spin" />
+        </div>
+    );
+}
+
+export default function ReviewPage() {
+    return (
+        <Suspense fallback={<ReviewPageFallback />}>
+            <ReviewPageContent />
+        </Suspense>
     );
 }

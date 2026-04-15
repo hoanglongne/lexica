@@ -137,10 +137,71 @@
 - [x] Test lại kiến thức ở các lần ôn tập (thay vì chỉ nhìn card)
 
 ## Phase 9: Stats & Analytics Dashboard
-- [ ] Heatmap (activity calendar)
-- [ ] Charts (progress over time)
-- [ ] Thống kê dạng số (words learned, accuracy, streaks)
-- [ ] Pie chart (card states breakdown)
+
+### Task 1: Hệ thống lưu lịch sử học tập (Data Infrastructure)
+- [ ] Thêm `studyHistory` vào store: `{ date: { swipes, correct, wrong, eloChange } }`
+- [ ] Hook vào `recordSwipe()` để tự động log mỗi ngày
+- [ ] Tính `dailyAccuracy` từ `cardProgress`
+- [ ] Tạo helper `getStudyStats()` để aggregate data cho charts
+
+### Task 2: Cài đặt thư viện biểu đồ
+- [ ] `npm install recharts`
+- [ ] Tạo wrapper components: `<LineChart>`, `<PieChart>`, `<AreaChart>`
+- [ ] Style theo dark theme (slate-900, cyan accents)
+
+### Task 3: Tạo trang `/stats`
+- [ ] Tạo `app/stats/page.tsx`
+- [ ] Thêm nút nav: mobile (bottom bar), desktop (sidebar)
+- [ ] Layout: sticky header, scrollable content, 2-column grid (desktop)
+
+### Task 4: Activity Heatmap Calendar
+- [ ] Component: `<ActivityHeatmap />` (52 weeks grid + tooltip)
+- [ ] Data: `studyHistory` → color intensity (0-5+ swipes)
+- [ ] Tooltip: "15/04 — 42 từ, 83% đúng"
+- [ ] Colors: slate-800 (0) → cyan-500 (5+)
+
+### Task 5: Key Metrics Cards (4 thẻ thống kê)
+- [ ] Card: **Tổng từ đã học** (learnedWords.size) — BookOpen icon
+- [ ] Card: **Tỷ lệ đúng** (accuracy %) — Target icon
+- [ ] Card: **Streak hiện tại** (currentStreak) — Flame icon
+- [ ] Card: **Streak dài nhất** (longestStreak) — Trophy icon
+- [ ] Layout: 2x2 grid mobile, 4 columns desktop
+
+### Task 6: Biểu đồ đường ELO Progress
+- [ ] Component: `<ELOChart data={eloHistory} />`
+- [ ] X-axis: dates (30 days), Y-axis: ELO (900-1300)
+- [ ] Gradient fill: cyan → transparent
+- [ ] Tooltip: "15/04 — ELO 1050 (+12)"
+
+### Task 7: Biểu đồ xu hướng Accuracy
+- [ ] Component: `<AccuracyChart data={dailyAccuracy} />`
+- [ ] X-axis: dates, Y-axis: 0-100%
+- [ ] Color: green gradient (≥80%), amber (<70%)
+- [ ] Show average line (dotted)
+
+### Task 8: Biểu đồ tròn Card States
+- [ ] Component: `<CardStatesChart />`
+- [ ] Data: `not_started`, `learned (seed)`, `sprout`, `mastered`
+- [ ] Colors: slate-600 (chưa), cyan (học), green (luyện), gold (thạo)
+- [ ] Center label: "500 total cards"
+
+### Task 9: Lịch sử phiên học (Session History)
+- [ ] Component: `<SessionHistory sessions={last7Days} />`
+- [ ] Columns: Ngày, Số từ, Đúng, Accuracy %, ELO change
+- [ ] Mobile: collapsed cards; Desktop: table
+- [ ] "Xem tất cả" button → expandable
+
+### Task 10: Huy hiệu thành tích (Optional - Bonus)
+- [ ] Badge: "Khởi đầu" (1st word learned)
+- [ ] Badge: "Thế kỷ" (100 words)
+- [ ] Badge: "Ngọn lửa" (7 day streak)
+- [ ] Badge: "Bất khả chiến bại" (30 day streak)
+- [ ] Badge grid với locked/unlocked states
+
+**Thứ tự ưu tiên:**
+- P0 (bắt buộc): Task 1-5 (foundation + core stats)
+- P1 (quan trọng): Task 6-8 (charts)
+- P2 (bonus): Task 9-10 (history + badges)
 
 ## Phase 10: Design System & Animations
 - [ ] Redesign app theo bộ design system nhất quán (sẽ cung cấp)
