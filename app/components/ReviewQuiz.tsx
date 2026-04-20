@@ -7,7 +7,7 @@ import { VocabCardData } from './VocabCard';
 
 interface ReviewQuizProps {
     card: VocabCardData;
-    onSwipe: (direction: 'left' | 'right') => void;
+    onSwipe: (direction: 'left' | 'right', source?: 'manual' | 'voice' | 'quiz') => void;
 }
 
 export default function ReviewQuiz({ card, onSwipe }: ReviewQuizProps) {
@@ -28,7 +28,7 @@ export default function ReviewQuiz({ card, onSwipe }: ReviewQuizProps) {
         setAnswered(true);
         const isCorrect = option === card.translationHint;
         setTimeout(() => {
-            onSwipe(isCorrect ? 'right' : 'left');
+            onSwipe(isCorrect ? 'right' : 'left', 'quiz');
         }, 700);
     };
 

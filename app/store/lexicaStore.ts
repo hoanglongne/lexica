@@ -107,6 +107,9 @@ interface LexicaStore {
 
     // Review Session
     submitReviewAnswer: (cardId: string, correct: boolean) => void;
+
+    // Mastered action
+    markAsMastered: (cardId: string) => void;
 }
 
 const INITIAL_USER_STATS: UserStats = {
@@ -482,6 +485,42 @@ export const useLexicaStore = create<LexicaStore>()(
                     cardProgress: { ...cardProgress, [cardId]: updated },
                     studyHistory: updatedStudyHistory,
                 });
+            },
+
+            markAsMastered: (cardId) => {
+                const { cardProgress, learnedWords, currentDeck } = get();
+                const now = Date.now();
+
+                // Set card to mastered state immediately
+                const updatedCardProgress = {
+                    ...cardProgress,
+                    [cardId]: {
+                        cardId,
+                        state: 'mastered' as const,
+                        lastReviewedAt: now,
+                        nextReviewAt: now + (30 * 24 * 60 * 60 * 1000), // Review in 30 days
+                        reviewCount: (cardProgress[cardId]?.reviewCount || 0) + 1,
+                        wrongCount: cardProgress[cardId]?.wrongCount || 0,
+                    },
+                };
+
+                // Add to learned words
+                const updatedLearnedWords = new Set(learnedWords);
+                updatedLearnedWords.add(cardId);
+
+                // Remove from deck
+                const updatedDeck = currentDeck.filter(card => card.id !== cardId);
+
+                set({
+                    cardProgress: updatedCardProgress,
+                    learnedWords: updatedLearnedWords,
+                    currentDeck: updatedDeck,
+                });
+
+                // Load new deck if empty
+                if (updatedDeck.length === 0) {
+                    get().loadNewDeck();
+                }
             },
 
             // Story Mode: Check if user should unlock a new story

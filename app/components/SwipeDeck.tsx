@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PartyPopper, Check, X } from 'lucide-react';
+import { PartyPopper, Check, X, RotateCcw, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import VocabCard from './VocabCard';
 import { useLexicaStore } from '../store/lexicaStore';
 import { analytics } from '../lib/analytics';
+import { getDueCards } from '../lib/eloAlgorithm';
 
 export default function SwipeDeck() {
     const cards = useLexicaStore(state => state.currentDeck);
@@ -17,6 +19,9 @@ export default function SwipeDeck() {
 
     const swipeMode = useLexicaStore(state => state.swipeMode);
 
+    const dueCount = getDueCards(cardProgress).length;
+
+    const [lastSwipeWasReview, setLastSwipeWasReview] = useState<boolean>(false);
     const [lastSwipeDirection, setLastSwipeDirection] = useState<'left' | 'right' | null>(null);
     const [cardExitDirections, setCardExitDirections] = useState<Record<string, 'left' | 'right'>>({});
 
@@ -31,9 +36,16 @@ export default function SwipeDeck() {
     const handleSwipe = useCallback((
         direction: 'left' | 'right',
         cardId: string,
-        source: 'manual' | 'voice' = 'manual'
+        source: 'manual' | 'voice' | 'quiz' = 'manual'
     ) => {
         const isReviewCard = Boolean(cardProgress[cardId]);
+
+        // BLOCKING LOGIC: User cannot swipe RIGHT manually if it's a review card.
+        // For review cards, they MUST answer the quiz.
+        // For new cards, we allow swiping right to start learning.
+        if (direction === 'right' && source === 'manual' && isReviewCard) {
+            return;
+        }
 
         if (swipeMode === 'voice' && direction === 'right' && source !== 'voice') {
             return;
@@ -49,6 +61,7 @@ export default function SwipeDeck() {
             if (!hasEnergy) return;
         }
 
+        setLastSwipeWasReview(isReviewCard);
         setLastSwipeDirection(direction);
         setTimeout(() => setLastSwipeDirection(null), 1000);
 
@@ -105,22 +118,43 @@ export default function SwipeDeck() {
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="mb-6"
+                    className="mb-4"
                 >
-                    <PartyPopper className="w-24 h-24 text-yellow-400 mx-auto" />
+                    <PartyPopper className="w-20 h-20 text-yellow-400 mx-auto" />
                 </motion.div>
-                <h2 className="text-3xl font-bold text-cyan-400 mb-4">
-                    Deck Complete!
+                <h2 className="text-2xl font-bold text-cyan-400 mb-2">
+                    Hoàn thành bộ bài!
                 </h2>
-                <p className="text-slate-400 text-lg mb-8">
-                    You cleared the deck. Story Mode coming in Phase 5...
+                <p className="text-slate-400 text-sm mb-6">
+                    Bạn đã quẹt hết các thẻ trong lượt này.
                 </p>
-                <button
-                    onClick={() => useLexicaStore.getState().loadNewDeck()}
-                    className="px-8 py-4 bg-cyan-600 hover:bg-cyan-700 rounded-xl font-bold text-white transition-colors"
-                >
-                    LOAD NEW DECK →
-                </button>
+
+                <div className="flex flex-col gap-3 w-full max-w-xs">
+                    {dueCount > 0 && (
+                        <Link
+                            href="/review"
+                            className="w-full flex items-center justify-between px-4 py-3 bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 rounded-xl transition-all group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-amber-500/20">
+                                    <RotateCcw className="w-4 h-4 text-amber-400" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-amber-200 text-sm font-bold">Ôn tập chuyên sâu</p>
+                                    <p className="text-amber-500/70 text-[10px]">Còn {dueCount} từ đến hạn</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                    )}
+
+                    <button
+                        onClick={() => useLexicaStore.getState().loadNewDeck()}
+                        className="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-700 rounded-xl font-bold text-white text-sm transition-colors flex items-center justify-center gap-2"
+                    >
+                        HỌC TIẾP →
+                    </button>
+                </div>
             </div>
         );
     }
@@ -128,7 +162,6 @@ export default function SwipeDeck() {
     return (
         <div className="relative w-full h-100 flex items-center justify-center">
             {/* Mode Toggle */}
-            {/* Swipe Feedback */}
             <AnimatePresence>
                 {lastSwipeDirection && (
                     <motion.div
@@ -136,18 +169,22 @@ export default function SwipeDeck() {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="absolute z-50 flex items-center gap-2 text-4xl font-bold"
+                        className="absolute z-50 flex flex-col items-center gap-2 text-4xl font-bold pointer-events-none"
                     >
                         {lastSwipeDirection === 'right' ? (
-                            <span className="flex items-center gap-2 text-green-400">
-                                <Check className="w-12 h-12" />
-                                REMEMBER
-                            </span>
+                            <div className="flex flex-col items-center">
+                                <span className="flex items-center gap-2 text-green-400">
+                                    <Check className="w-12 h-12" />
+                                    {lastSwipeWasReview ? 'CHÍNH XÁC' : 'GHI NHỚ'}
+                                </span>
+                            </div>
                         ) : (
-                            <span className="flex items-center gap-2 text-red-400">
-                                <X className="w-12 h-12" />
-                                FORGET
-                            </span>
+                            <div className="flex flex-col items-center">
+                                <span className="flex items-center gap-2 text-red-400">
+                                    <X className="w-12 h-12" />
+                                    {lastSwipeWasReview ? 'QUÊN' : 'BỎ QUA'}
+                                </span>
+                            </div>
                         )}
                     </motion.div>
                 )}

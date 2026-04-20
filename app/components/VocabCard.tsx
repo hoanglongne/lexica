@@ -25,7 +25,7 @@ export interface VocabCardData {
 interface VocabCardProps {
     card: VocabCardData;
     index: number;
-    onSwipe: (direction: 'left' | 'right', source?: 'manual' | 'voice') => void;
+    onSwipe: (direction: 'left' | 'right', source?: 'manual' | 'voice' | 'quiz') => void;
     revealed?: boolean;
     onReveal?: () => void;
 }
@@ -34,6 +34,7 @@ export default function VocabCard({ card, index, onSwipe, revealed: controlledRe
     const [internalRevealed, setInternalRevealed] = useState(false);
     const swipeMode = useLexicaStore(state => state.swipeMode);
     const cardProgress = useLexicaStore(state => state.cardProgress[card.id]);
+    const markAsMastered = useLexicaStore(state => state.markAsMastered);
 
     const revealed = controlledRevealed !== undefined ? controlledRevealed : internalRevealed;
     const handleReveal = onReveal ?? (() => setInternalRevealed(true));
@@ -41,6 +42,11 @@ export default function VocabCard({ card, index, onSwipe, revealed: controlledRe
     const isBossCard = card.isBossCard || false;
     const isVoiceSwipeRequired = isBossCard || (swipeMode === 'voice' && index === 0);
     const isReviewCard = Boolean(cardProgress);
+
+    const handleMarkAsMastered = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        markAsMastered(card.id);
+    };
 
     const speakWord = () => {
         if ('speechSynthesis' in window) {
@@ -190,15 +196,26 @@ export default function VocabCard({ card, index, onSwipe, revealed: controlledRe
                         ) : isReviewCard && index === 0 ? (
                             <ReviewQuiz card={card} onSwipe={onSwipe} />
                         ) : (
-                            <div className="px-4 py-3 rounded-lg bg-slate-700/80 border border-slate-600 w-full">
-                                <div className="flex items-center justify-center gap-2 mb-1">
-                                    <p className="text-base text-slate-200 font-medium">{card.word}</p>
-                                    <button onClick={(e) => { e.stopPropagation(); speakWord(); }} className="text-slate-400 hover:text-cyan-400 transition-colors">
-                                        <Volume2 className="w-5 h-5" />
-                                    </button>
+                            <div className="space-y-3">
+                                <div className="px-4 py-3 rounded-lg bg-slate-700/80 border border-slate-600 w-full">
+                                    <div className="flex items-center justify-center gap-2 mb-1">
+                                        <p className="text-base text-slate-200 font-medium">{card.word}</p>
+                                        <button onClick={(e) => { e.stopPropagation(); speakWord(); }} className="text-slate-400 hover:text-cyan-400 transition-colors">
+                                            <Volume2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    {card.ipa && <p className="text-xs text-slate-500 text-center mb-1 font-mono">/{card.ipa}/</p>}
+                                    <p className="text-sm text-slate-400 text-center">{card.translationHint}</p>
                                 </div>
-                                {card.ipa && <p className="text-xs text-slate-500 text-center mb-1 font-mono">/{card.ipa}/</p>}
-                                <p className="text-sm text-slate-400 text-center">{card.translationHint}</p>
+                                {!isReviewCard && index === 0 && (
+                                    <button
+                                        onClick={handleMarkAsMastered}
+                                        className="w-full py-2 text-[11px] font-bold text-slate-500 hover:text-cyan-400 transition-colors border border-dashed border-slate-700 hover:border-cyan-500/50 rounded-lg flex items-center justify-center gap-1.5 group"
+                                    >
+                                        <Check className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                                        TÔI ĐÃ BIẾT TỪ NÀY
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

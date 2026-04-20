@@ -37,7 +37,7 @@ function send(event: LexicaEvent, props?: EventProps): void {
 }
 
 export const analytics = {
-    swipe(direction: 'left' | 'right', cardId: string, source: 'manual' | 'voice') {
+    swipe(direction: 'left' | 'right', cardId: string, source: 'manual' | 'voice' | 'quiz') {
         send('swipe', { direction, cardId, source });
     },
 

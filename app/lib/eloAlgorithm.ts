@@ -214,10 +214,14 @@ export function generateInitialDeck(
     // Step 1: Get all due cards
     const dueCardProgresses = getDueCards(cardProgress);
 
-    // Step 2: Add due cards to deck (up to DECK_SIZE)
+    // Step 2: Add due cards to deck (up to a LIMIT, e.g., 3)
     // Only include due cards that match the selected level filter
+    const MAX_REVIEW_CARDS_IN_DECK = 3;
+    let reviewCardsAdded = 0;
+
     for (const progress of dueCardProgresses) {
         if (deck.length >= DECK_SIZE) break;
+        if (reviewCardsAdded >= MAX_REVIEW_CARDS_IN_DECK) break;
 
         // Find card in database
         const cardData = filteredDatabase.find((c: Omit<VocabCardData, 'state'>) => c.id === progress.cardId);
@@ -226,6 +230,7 @@ export function generateInitialDeck(
                 ...cardData,
                 state: progress.state, // Use saved state
             });
+            reviewCardsAdded++;
 
             // Add to seen list
             seenCardIds.push(cardData.id);

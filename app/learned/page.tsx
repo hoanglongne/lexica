@@ -31,15 +31,15 @@ function getLevelLabel(level: string) {
 function getLevelBadgeClasses(level: string) {
     switch (level) {
         case 'beginner':
-            return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            return 'bg-slate-800 text-slate-400 border-slate-700';
         case 'intermediate':
             return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
         case 'advanced':
-            return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+            return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
         case 'expert':
-            return 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20';
+            return 'bg-cyan-500/30 text-cyan-200 border-cyan-500/40';
         default:
-            return 'bg-slate-500/10 text-slate-300 border-slate-500/20';
+            return 'bg-slate-800 text-slate-400 border-slate-700';
     }
 }
 
@@ -94,24 +94,24 @@ export default function LearnedPage() {
                         </h1>
                     </div>
                     <div className="flex items-center justify-center gap-8 text-base flex-wrap">
-                        <div className="flex items-center gap-2">
-                            <span className="text-slate-400">Tổng số:</span>
-                            <span className="text-cyan-400 font-bold text-2xl">{learnedCount}</span>
+                        <div className="flex flex-col items-center">
+                            <span className="text-slate-500 text-xs uppercase tracking-wider mb-1">Tổng số</span>
+                            <span className="text-white font-bold text-2xl tracking-tight">{learnedCount}</span>
                         </div>
-                        <div className="w-px h-8 bg-slate-700"></div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-slate-400">Thành thạo:</span>
-                            <span className="text-yellow-400 font-bold text-2xl flex items-center gap-1.5">
+                        <div className="w-px h-10 bg-slate-800"></div>
+                        <div className="flex flex-col items-center">
+                            <span className="text-slate-500 text-xs uppercase tracking-wider mb-1">Thành thạo</span>
+                            <span className="text-amber-400 font-bold text-2xl tracking-tight flex items-center gap-1.5">
                                 {masteredCount}
-                                <Trophy className="w-5 h-5" />
+                                <Trophy className="w-4 h-4" />
                             </span>
                         </div>
-                        <div className="w-px h-8 bg-slate-700"></div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-slate-400">Stories:</span>
-                            <span className="text-purple-400 font-bold text-2xl flex items-center gap-1.5">
-                                {unlockedStories.length}<span className="text-slate-600 text-lg">/{STORIES.length}</span>
-                                <BookMarked className="w-5 h-5" />
+                        <div className="w-px h-10 bg-slate-800"></div>
+                        <div className="flex flex-col items-center">
+                            <span className="text-slate-500 text-xs uppercase tracking-wider mb-1">Stories</span>
+                            <span className="text-cyan-400 font-bold text-2xl tracking-tight flex items-center gap-1.5">
+                                {unlockedStories.length}<span className="text-slate-600 text-sm font-medium">/{STORIES.length}</span>
+                                <BookMarked className="w-4 h-4" />
                             </span>
                         </div>
                     </div>
@@ -119,14 +119,14 @@ export default function LearnedPage() {
 
                 {/* Progress Bar */}
                 {learnedCount > 0 && (
-                    <div className="mb-6">
-                        <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
-                            <span>Tiến độ</span>
-                            <span>{Math.round((masteredCount / learnedCount) * 100)}% thành thạo</span>
+                    <div className="mb-6 px-4 py-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
+                        <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-slate-500 mb-2">
+                            <span>Tiến độ thành thạo</span>
+                            <span className="text-cyan-400">{Math.round((masteredCount / learnedCount) * 100)}%</span>
                         </div>
-                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-slate-900 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-linear-to-r from-cyan-500 to-yellow-400 transition-all duration-500"
+                                className="h-full bg-cyan-500 transition-all duration-700 ease-out shadow-[0_0_12px_rgba(6,182,212,0.4)]"
                                 style={{ width: `${(masteredCount / learnedCount) * 100}%` }}
                             ></div>
                         </div>

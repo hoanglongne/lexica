@@ -463,7 +463,7 @@ function HomeContent() {
               </Link>
               {dueToday > 0 && (
                 <Link href="/review">
-                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer">
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer mt-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <RotateCcw className="w-4 h-4 text-amber-400" />

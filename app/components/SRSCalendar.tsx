@@ -68,7 +68,7 @@ export default function SRSCalendar({ cardProgress }: SRSCalendarProps) {
                             day.isToday
                                 ? 'bg-cyan-400'
                                 : intensity >= 4
-                                    ? 'bg-purple-400'
+                                    ? 'bg-amber-400'
                                     : intensity >= 3
                                         ? 'bg-cyan-500'
                                         : intensity >= 2
@@ -132,7 +132,7 @@ export default function SRSCalendar({ cardProgress }: SRSCalendarProps) {
                     <span>Hôm nay</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-sm bg-purple-400" />
+                    <div className="w-2.5 h-2.5 rounded-sm bg-amber-400" />
                     <span>Nhiều từ</span>
                 </div>
                 <div className="flex items-center gap-1.5">

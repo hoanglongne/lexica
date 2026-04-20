@@ -12,14 +12,14 @@ type CardWithProgress = Omit<BaseCardData, 'state'> & { progress?: UserCardProgr
 const PAGE_SIZE = 10;
 
 const STATE_ICON = { seed: Sprout, sprout: Leaf, gold: Sparkles, mastered: Trophy } as const;
-const STATE_COLOR = { seed: 'text-green-400', sprout: 'text-cyan-400', gold: 'text-yellow-400', mastered: 'text-yellow-400' } as const;
-const STATE_LABEL = { seed: 'Đang học', sprout: 'Đang nhớ', gold: 'Thuộc tốt', mastered: 'Thành thạo' } as const;
+const STATE_COLOR = { seed: 'text-slate-500', sprout: 'text-cyan-500', gold: 'text-cyan-400', mastered: 'text-amber-400' } as const;
+const STATE_LABEL = { seed: 'Mầm non', sprout: 'Đang nhớ', gold: 'Thuộc tốt', mastered: 'Thành thạo' } as const;
 const LEVEL_LABEL: Record<string, string> = { beginner: 'Cơ bản', intermediate: 'Trung cấp', advanced: 'Nâng cao', expert: 'Chuyên gia' };
 const LEVEL_COLOR: Record<string, string> = {
-    beginner: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    beginner: 'bg-slate-800 text-slate-400 border-slate-700',
     intermediate: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-    advanced: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    expert: 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20',
+    advanced: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    expert: 'bg-cyan-500/30 text-cyan-200 border-cyan-500/40',
 };
 
 function formatNextReviewFull(nextReviewAt?: number, isMastered?: boolean) {
@@ -60,6 +60,7 @@ function WordDetailModal({ card, onClose }: { card: CardWithProgress; onClose: (
     const state = card.progress?.state || 'seed';
     const StateIcon = STATE_ICON[state];
     const stateColor = STATE_COLOR[state];
+    const now = Date.now();
 
     const speakWord = () => {
         if ('speechSynthesis' in window) {
@@ -121,15 +122,15 @@ function WordDetailModal({ card, onClose }: { card: CardWithProgress; onClose: (
                 <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 mb-5">
                     <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-2">Ví dụ</p>
                     <p className="text-slate-200 text-sm leading-relaxed italic">
-                        "{highlightWord(card.scenario, card.word)}"
+                        &ldquo;{highlightWord(card.scenario, card.word)}&rdquo;
                     </p>
                 </div>
 
                 {/* SRS info */}
                 <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-500">Lịch ôn tập</span>
-                    <span className={card.progress?.state === 'mastered' ? 'text-yellow-400' :
-                        (card.progress?.nextReviewAt && card.progress.nextReviewAt <= Date.now() ? 'text-amber-400' : 'text-slate-400')}>
+                    <span className={card.progress?.state === 'mastered' ? 'text-amber-400' :
+                        (card.progress?.nextReviewAt && card.progress.nextReviewAt <= now ? 'text-amber-400' : 'text-slate-400')}>
                         {formatNextReviewFull(card.progress?.nextReviewAt, card.progress?.state === 'mastered')}
                     </span>
                 </div>
